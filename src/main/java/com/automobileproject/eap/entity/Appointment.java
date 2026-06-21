@@ -49,12 +49,8 @@ public class Appointment {
     @JoinColumn(name = "vehicle_id", nullable = false)
     private Vehicle vehicle;
 
-    // Primary service (kept for backward compatibility)
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "service_id", nullable = true)
-    private Service service;
-
-    // Multiple services support
+    // All services booked for this appointment (a modification request may have none yet).
+    // This is the single source of truth — do not add a second "primary service" field here.
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "appointment_services",
@@ -87,5 +83,16 @@ public class Appointment {
                     ? APPOINTMENT_STATUS_TYPES.SCHEDULED
                     : APPOINTMENT_STATUS_TYPES.QUOTE_REQUESTED;
         }
+    }
+
+    /**
+     * Returns one service to show as the "main" service when only a single
+     * name needs to be displayed (e.g. a summary list). Modification projects
+     * may have no services yet, so this can return null.
+     * Replaces the old standalone "service" field — use this instead of adding
+     * a second field back.
+     */
+    public Service getPrimaryService() {
+        return (services == null || services.isEmpty()) ? null : services.iterator().next();
     }
 }
