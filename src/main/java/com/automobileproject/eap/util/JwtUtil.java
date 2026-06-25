@@ -48,11 +48,11 @@ public class JwtUtil {
 
     /** Parses and validates a token, returning all claims. Throws JwtException on failure. */
     public Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(getSigningKey())
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
                 .build()
-                .parseSignedClaims(token)
-                .getPayload();
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     /** Extracts the email (subject) from a token. */
