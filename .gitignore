@@ -35,3 +35,6 @@ build/
 ### Spring Boot local secrets
 src/main/resources/application-dev.properties
 
+# Ignore local data seeder
+src/main/java/com/automobileproject/eap/helper/DataSeeder.java
+
