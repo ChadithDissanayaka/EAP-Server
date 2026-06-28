@@ -1,7 +1,9 @@
 package com.automobileproject.eap.service.impl;
 
 import com.automobileproject.eap.dto.request.UserRequestDTO;
+import com.automobileproject.eap.dto.response.EmployeeResponseDTO;
 import com.automobileproject.eap.dto.response.UserResponseDTO;
+import com.automobileproject.eap.entity.ROLE_TYPES;
 import com.automobileproject.eap.entity.User;
 import com.automobileproject.eap.exception.DuplicateEntryException;
 import com.automobileproject.eap.exception.EntryNotFoundException;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -138,5 +141,14 @@ public class UserServiceImpl implements UserService {
         }
 
         log.info("Password reset token validated for user: {}", user.getEmail());
+    }
+
+    @Override
+    public List<EmployeeResponseDTO> getActiveEmployees() {
+        return userRepo.findByRole(ROLE_TYPES.EMPLOYEE)
+                .stream()
+                .filter(User::isActive)
+                .map(userMapper::toEmployeeResponseDTO)
+                .toList();
     }
 }

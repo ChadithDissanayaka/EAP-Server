@@ -2,6 +2,9 @@ package com.automobileproject.eap.service;
 
 import com.automobileproject.eap.dto.request.UserRequestDTO;
 import com.automobileproject.eap.dto.response.UserResponseDTO;
+import com.automobileproject.eap.dto.response.EmployeeResponseDTO;
+
+import java.util.List;
 
 public interface UserService {
 
@@ -18,4 +21,6 @@ public interface UserService {
     void resetPassword(String token, String newPassword);
 
     void validatePasswordResetToken(String token);
+
+    List<EmployeeResponseDTO> getActiveEmployees();
 }
