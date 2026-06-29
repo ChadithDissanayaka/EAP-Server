@@ -1,6 +1,7 @@
 package com.automobileproject.eap.mapper;
 
 import com.automobileproject.eap.dto.request.UserRequestDTO;
+import com.automobileproject.eap.dto.response.EmployeeResponseDTO;
 import com.automobileproject.eap.dto.response.LoginResponseDTO;
 import com.automobileproject.eap.dto.response.UserResponseDTO;
 import com.automobileproject.eap.entity.User;
@@ -54,6 +55,18 @@ public class UserMapper {
                 .lastName(user.getLastName())
                 .phoneNumber(user.getPhoneNumber())
                 .token(token)
+                .build();
+    }
+
+    public EmployeeResponseDTO toEmployeeResponseDTO(User user) {
+        if (user == null) {
+            throw new ValidationException("User entity must not be null");
+        }
+        return EmployeeResponseDTO.builder()
+                .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .role(user.getRole().name())
                 .build();
     }
 }

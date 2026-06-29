@@ -39,7 +39,12 @@ public class JWTAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = authHeader.substring(7);
+        String token = authHeader.substring(7).trim();
+
+        // Handle Swagger UI sending "Bearer <token>" in the token field (double Bearer)
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7).trim();
+        }
 
         // Step 3-4: Skip if token is invalid
         if (!jwtUtil.isValid(token)) {
