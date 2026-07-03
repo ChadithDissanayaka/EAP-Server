@@ -32,13 +32,13 @@ public class ServiceCategoryController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<StandardResponseDTO> createCategory(@Valid @RequestBody ServiceCategoryRequestDTO dto) {
         ServiceCategoryResponseDTO response = serviceCategoryService.createCategory(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(StandardResponseDTO.builder()
                         .code(201)
                         .message("Service category created successfully")
                         .data(response)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Update a service category (Admin only)")
@@ -48,13 +48,13 @@ public class ServiceCategoryController {
             @PathVariable UUID id,
             @Valid @RequestBody ServiceCategoryRequestDTO dto) {
         ServiceCategoryResponseDTO response = serviceCategoryService.updateCategory(id, dto);
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Service category updated successfully")
                         .data(response)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Delete a service category (Admin only)")
@@ -62,13 +62,13 @@ public class ServiceCategoryController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<StandardResponseDTO> deleteCategory(@PathVariable UUID id) {
         serviceCategoryService.deleteCategory(id);
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Service category deleted successfully")
                         .data(null)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Get all service categories")
@@ -76,13 +76,13 @@ public class ServiceCategoryController {
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     public ResponseEntity<StandardResponseDTO> getAllCategories() {
         List<ServiceCategoryResponseDTO> categories = serviceCategoryService.getAllCategories();
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Service categories retrieved successfully")
                         .data(categories)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Get a service category by ID")
@@ -90,12 +90,12 @@ public class ServiceCategoryController {
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     public ResponseEntity<StandardResponseDTO> getCategoryById(@PathVariable UUID id) {
         ServiceCategoryResponseDTO response = serviceCategoryService.getCategoryById(id);
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Service category retrieved successfully")
                         .data(response)
-                        .build()
-        );
+                        .build());
     }
 }

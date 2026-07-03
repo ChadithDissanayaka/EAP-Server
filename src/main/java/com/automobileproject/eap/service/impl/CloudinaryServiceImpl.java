@@ -30,11 +30,11 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             throw new ValidationException("File must be an image");
         }
 
-        Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
+        Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(),
                 ObjectUtils.asMap(
                         "folder", folder,
                         "resource_type", "image",
-                        "transformation", new Transformation()
+                        "transformation", new Transformation<>()
                                 .width(800).height(600).crop("limit")
                                 .quality("auto").fetchFormat("auto")
                 ));

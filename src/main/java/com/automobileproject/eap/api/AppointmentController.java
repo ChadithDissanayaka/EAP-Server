@@ -46,8 +46,13 @@ public class AppointmentController {
         String email = authentication.getName();
         AppointmentResponseDTO response = appointmentService.createStandardAppointment(dto, email);
         publisher.publishEvent(new AppointmentCreatedEvent(this, response.getId(), email));
-        return ResponseEntity.status(HttpStatus.CREATED).body(StandardResponseDTO.builder()
-                .code(201).message("Appointment booked successfully").data(response).build());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(StandardResponseDTO.builder()
+                        .code(201)
+                        .message("Appointment booked successfully")
+                        .data(response)
+                        .build());
     }
 
     @Operation(summary = "Book a slot-based service appointment (Customer only)")
@@ -58,8 +63,13 @@ public class AppointmentController {
         String email = authentication.getName();
         AppointmentResponseDTO response = appointmentService.createSlotBasedAppointment(dto, email);
         publisher.publishEvent(new AppointmentCreatedEvent(this, response.getId(), email));
-        return ResponseEntity.status(HttpStatus.CREATED).body(StandardResponseDTO.builder()
-                .code(201).message("Slot-based appointment booked successfully").data(response).build());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(StandardResponseDTO.builder()
+                        .code(201)
+                        .message("Slot-based appointment booked successfully")
+                        .data(response)
+                        .build());
     }
 
     @Operation(summary = "Submit a modification project request (Customer only)")
@@ -70,8 +80,13 @@ public class AppointmentController {
         String email = authentication.getName();
         AppointmentResponseDTO response = appointmentService.createModificationRequest(dto, email);
         publisher.publishEvent(new AppointmentCreatedEvent(this, response.getId(), email));
-        return ResponseEntity.status(HttpStatus.CREATED).body(StandardResponseDTO.builder()
-                .code(201).message("Modification request submitted successfully").data(response).build());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(StandardResponseDTO.builder()
+                        .code(201)
+                        .message("Modification request submitted successfully")
+                        .data(response)
+                        .build());
     }
 
     @Operation(summary = "Get available slots for a date and period (public)")
@@ -80,15 +95,25 @@ public class AppointmentController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam SESSION_PERIOD_TYPES period) {
         List<AppointmentSlotResponseDTO> slots = appointmentService.getAvailableSlots(date, period);
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Available slots retrieved").data(slots).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Available slots retrieved")
+                        .data(slots)
+                        .build());
     }
 
     @Operation(summary = "Get all slot templates (public)")
     @GetMapping("/slot-templates")
     public ResponseEntity<StandardResponseDTO> getSlotTemplates() {
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Slot templates retrieved").data(appointmentService.getAllSlotTemplates()).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Slot templates retrieved")
+                        .data(appointmentService.getAllSlotTemplates())
+                        .build());
     }
 
     @Operation(summary = "Get all appointments, optionally filtered by status (Employee/Admin)")
@@ -99,71 +124,104 @@ public class AppointmentController {
         List<AppointmentResponseDTO> list = status != null
                 ? appointmentService.getAppointmentsByStatus(status)
                 : appointmentService.getAllAppointments();
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Appointments retrieved").data(list).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Appointments retrieved")
+                        .data(list)
+                        .build());
     }
 
     @Operation(summary = "Get all scheduled appointments (Employee/Admin)")
     @GetMapping("/scheduled")
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> getScheduledAppointments() {
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Scheduled appointments retrieved")
-                .data(appointmentService.getScheduledAppointments()).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Scheduled appointments retrieved")
+                        .data(appointmentService.getScheduledAppointments())
+                        .build());
     }
 
     @Operation(summary = "Get all completed appointments / service history (Employee/Admin)")
     @GetMapping("/history")
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> getAllServiceHistory() {
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Service history retrieved")
-                .data(appointmentService.getAllCompletedAppointments()).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Service history retrieved")
+                        .data(appointmentService.getAllCompletedAppointments())
+                        .build());
     }
 
     @Operation(summary = "Get employee's in-progress appointments (Employee/Admin)")
     @GetMapping("/my-inprogress")
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> getMyInProgressAppointments(Authentication auth) {
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("In-progress appointments retrieved")
-                .data(appointmentService.getEmployeeInProgressAppointments(auth.getName())).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("In-progress appointments retrieved")
+                        .data(appointmentService.getEmployeeInProgressAppointments(auth.getName()))
+                        .build());
     }
 
     @Operation(summary = "Get employee's awaiting-parts appointments (Employee/Admin)")
     @GetMapping("/my-awaiting-parts")
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> getMyAwaitingPartsAppointments(Authentication auth) {
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Awaiting-parts appointments retrieved")
-                .data(appointmentService.getEmployeeAwaitingPartsAppointments(auth.getName())).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Awaiting-parts appointments retrieved")
+                        .data(appointmentService.getEmployeeAwaitingPartsAppointments(auth.getName()))
+                        .build());
     }
 
     @Operation(summary = "Get employee's completed appointments (Employee/Admin)")
     @GetMapping("/my-completed")
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> getMyCompletedAppointments(Authentication auth) {
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Completed appointments retrieved")
-                .data(appointmentService.getEmployeeCompletedAppointments(auth.getName())).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Completed appointments retrieved")
+                        .data(appointmentService.getEmployeeCompletedAppointments(auth.getName()))
+                        .build());
     }
 
     @Operation(summary = "Get the logged-in customer's appointments (Customer only)")
     @GetMapping("/my-appointments")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<StandardResponseDTO> getMyAppointments(Authentication auth) {
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Your appointments retrieved")
-                .data(appointmentService.getAppointmentsByCustomerEmail(auth.getName())).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Your appointments retrieved")
+                        .data(appointmentService.getAppointmentsByCustomerEmail(auth.getName()))
+                        .build());
     }
 
     @Operation(summary = "Get the logged-in customer's service history (Customer only)")
     @GetMapping("/my-history")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<StandardResponseDTO> getMyServiceHistory(Authentication auth) {
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Your service history retrieved")
-                .data(appointmentService.getCustomerServiceHistory(auth.getName())).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Your service history retrieved")
+                        .data(appointmentService.getCustomerServiceHistory(auth.getName()))
+                        .build());
     }
 
     @Operation(summary = "Update appointment status (Employee/Admin)")
@@ -171,9 +229,13 @@ public class AppointmentController {
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> updateStatus(
             @PathVariable UUID id, @Valid @RequestBody UpdateAppointmentStatusRequestDTO dto) {
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Status updated")
-                .data(appointmentService.updateAppointmentStatus(id, dto.getStatus())).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Status updated")
+                        .data(appointmentService.updateAppointmentStatus(id, dto.getStatus()))
+                        .build());
     }
 
     @Operation(summary = "Update technician notes (Employee/Admin)")
@@ -181,9 +243,13 @@ public class AppointmentController {
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> updateNotes(
             @PathVariable UUID id, @Valid @RequestBody UpdateTechnicianNotesRequestDTO dto) {
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Technician notes updated")
-                .data(appointmentService.updateTechnicianNotes(id, dto.getTechnicianNotes())).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Technician notes updated")
+                        .data(appointmentService.updateTechnicianNotes(id, dto.getTechnicianNotes()))
+                        .build());
     }
 
     @Operation(summary = "Submit a quote for a modification project (Employee/Admin)")
@@ -191,9 +257,13 @@ public class AppointmentController {
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> submitQuote(
             @PathVariable UUID id, @Valid @RequestBody QuoteRequestDTO dto) {
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Quote submitted")
-                .data(appointmentService.submitQuote(id, dto.getQuotePrice(), dto.getQuoteDetails())).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Quote submitted")
+                        .data(appointmentService.submitQuote(id, dto.getQuotePrice(), dto.getQuoteDetails()))
+                        .build());
     }
 
     @Operation(summary = "Manually assign an employee to an appointment (Employee/Admin)")
@@ -201,9 +271,13 @@ public class AppointmentController {
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> assignEmployee(
             @PathVariable UUID id, @Valid @RequestBody AssignEmployeeRequestDTO dto) {
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Employee assigned")
-                .data(appointmentService.assignEmployee(id, dto.getEmployeeId())).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Employee assigned")
+                        .data(appointmentService.assignEmployee(id, dto.getEmployeeId()))
+                        .build());
     }
 
     @Operation(summary = "Accept a scheduled appointment (Employee/Admin)")
@@ -211,17 +285,25 @@ public class AppointmentController {
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> acceptAppointment(
             @PathVariable UUID id, Authentication auth) {
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Appointment accepted and started")
-                .data(appointmentService.acceptAppointment(id, auth.getName())).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Appointment accepted and started")
+                        .data(appointmentService.acceptAppointment(id, auth.getName()))
+                        .build());
     }
 
     @Operation(summary = "Cancel an appointment (Employee/Admin)")
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> cancelAppointment(@PathVariable UUID id) {
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Appointment cancelled")
-                .data(appointmentService.cancelAppointment(id)).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Appointment cancelled")
+                        .data(appointmentService.cancelAppointment(id))
+                        .build());
     }
 }

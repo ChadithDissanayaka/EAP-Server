@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,13 +37,13 @@ public class AppointmentSlotController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
         List<AppointmentSlotResponseDTO> slots = appointmentSlotService.getAvailableSlotsForDate(date);
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Available slots retrieved successfully")
                         .data(slots)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Get available slots for a specific date and session period (public)")
@@ -52,13 +53,13 @@ public class AppointmentSlotController {
             @RequestParam SESSION_PERIOD_TYPES period) {
 
         List<AppointmentSlotResponseDTO> slots = appointmentSlotService.getAvailableSlotsByPeriod(date, period);
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Available slots for period retrieved successfully")
                         .data(slots)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Check if a specific slot is available on a date (public)")
@@ -69,8 +70,9 @@ public class AppointmentSlotController {
             @RequestParam Integer slotNumber) {
 
         boolean available = appointmentSlotService.isSlotAvailable(date, period, slotNumber);
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Slot availability checked successfully")
                         .data(Map.of(
@@ -79,8 +81,7 @@ public class AppointmentSlotController {
                                 "slotNumber", slotNumber,
                                 "available", available
                         ))
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Get count of available slots for a date (public)")
@@ -93,8 +94,9 @@ public class AppointmentSlotController {
                 ? appointmentSlotService.countAvailableSlotsByPeriod(date, period)
                 : appointmentSlotService.countAvailableSlots(date);
 
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Slot count retrieved successfully")
                         .data(Map.of(
@@ -102,8 +104,7 @@ public class AppointmentSlotController {
                                 "period", period != null ? period.name() : "ALL",
                                 "availableSlots", count
                         ))
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Get all slot templates (Employee/Admin only)")
@@ -111,12 +112,12 @@ public class AppointmentSlotController {
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> getAllSlotTemplates() {
         List<AppointmentSlotResponseDTO> templates = appointmentSlotService.getAllSlotTemplates();
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Slot templates retrieved successfully")
                         .data(templates)
-                        .build()
-        );
+                        .build());
     }
 }

@@ -40,13 +40,13 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<StandardResponseDTO> register(@Valid @RequestBody UserRequestDTO dto) {
         UserResponseDTO response = userService.registerUser(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(StandardResponseDTO.builder()
                         .code(201)
                         .message("User registered successfully. Please verify your email.")
                         .data(response)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Login and receive JWT token")
@@ -58,13 +58,13 @@ public class AuthController {
                         "User not found with email: " + dto.getEmail()));
 
         if (!user.getEmailVerified()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
-                    StandardResponseDTO.builder()
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(StandardResponseDTO.builder()
                             .code(403)
                             .message("Please verify your email address before logging in.")
                             .data(null)
-                            .build()
-            );
+                            .build());
         }
 
         authenticationManager.authenticate(
@@ -74,26 +74,26 @@ public class AuthController {
         LoginResponseDTO loginResponse = userMapper.toLoginResponseDTO(user, token);
 
         log.info("Login successful for: {}", user.getEmail());
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Login successful")
                         .data(loginResponse)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Verify email address using token from email link")
     @GetMapping("/verify-email")
     public ResponseEntity<StandardResponseDTO> verifyEmail(@RequestParam("token") String token) {
         userService.verifyEmail(token);
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Email verified successfully. You can now log in.")
                         .data(null)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Request a password reset email")
@@ -105,38 +105,38 @@ public class AuthController {
         } catch (Exception e) {
             log.warn("Forgot password attempt for unknown email (suppressed): {}", dto.getEmail());
         }
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("If the email exists, a password reset link will be sent.")
                         .data(null)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Validate a password reset token")
     @GetMapping("/reset-password")
     public ResponseEntity<StandardResponseDTO> validateResetToken(@RequestParam("token") String token) {
         userService.validatePasswordResetToken(token);
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Token is valid. Submit your new password via POST /auth/reset-password.")
                         .data(null)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Reset password using token")
     @PostMapping("/reset-password")
     public ResponseEntity<StandardResponseDTO> resetPassword(@Valid @RequestBody ResetPasswordRequestDTO dto) {
         userService.resetPassword(dto.getToken(), dto.getNewPassword());
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Password reset successfully. You can now log in with your new password.")
                         .data(null)
-                        .build()
-        );
+                        .build());
     }
 }

@@ -33,8 +33,13 @@ public class TimeLogController {
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<StandardResponseDTO> getMyTimeLogs(Authentication auth) {
         List<TimeLogResponseDTO> logs = timeLogService.getMyTimeLogs(auth.getName());
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Your time logs retrieved").data(logs).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Your time logs retrieved")
+                        .data(logs)
+                        .build());
     }
 
     @Operation(summary = "Get all time logs across all employees (Admin only)")
@@ -42,8 +47,13 @@ public class TimeLogController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<StandardResponseDTO> getAllTimeLogs() {
         List<TimeLogResponseDTO> logs = timeLogService.getAllTimeLogs();
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("All time logs retrieved").data(logs).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("All time logs retrieved")
+                        .data(logs)
+                        .build());
     }
 
     @Operation(summary = "Get all time logs for a specific appointment (Employee/Admin)")
@@ -51,8 +61,13 @@ public class TimeLogController {
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> getTimeLogsByAppointment(@PathVariable UUID appointmentId) {
         List<TimeLogResponseDTO> logs = timeLogService.getTimeLogsByAppointmentId(appointmentId);
-        return ResponseEntity.ok(StandardResponseDTO.builder()
-                .code(200).message("Time logs for appointment retrieved").data(logs).build());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Time logs for appointment retrieved")
+                        .data(logs)
+                        .build());
     }
 
     @Operation(summary = "Create a new time log for an appointment (Employee only)")
@@ -63,7 +78,12 @@ public class TimeLogController {
             @Valid @RequestBody TimeLogRequestDTO dto,
             Authentication auth) {
         TimeLogResponseDTO log = timeLogService.createTimeLog(appointmentId, dto, auth.getName());
-        return ResponseEntity.status(HttpStatus.CREATED).body(StandardResponseDTO.builder()
-                .code(201).message("Time log created successfully").data(log).build());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(StandardResponseDTO.builder()
+                        .code(201)
+                        .message("Time log created successfully")
+                        .data(log)
+                        .build());
     }
 }

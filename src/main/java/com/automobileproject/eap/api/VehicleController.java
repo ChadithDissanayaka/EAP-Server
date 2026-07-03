@@ -35,13 +35,13 @@ public class VehicleController {
             Authentication authentication) {
 
         VehicleResponseDTO response = vehicleService.createVehicle(dto, authentication.getName());
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(StandardResponseDTO.builder()
                         .code(201)
                         .message("Vehicle added successfully")
                         .data(response)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Get all vehicles owned by the logged-in customer")
@@ -49,12 +49,12 @@ public class VehicleController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<StandardResponseDTO> getMyVehicles(Authentication authentication) {
         List<VehicleResponseDTO> vehicles = vehicleService.getVehiclesByOwner(authentication.getName());
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Vehicles retrieved successfully")
                         .data(vehicles)
-                        .build()
-        );
+                        .build());
     }
 }
