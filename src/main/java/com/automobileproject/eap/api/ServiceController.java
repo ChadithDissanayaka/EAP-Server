@@ -42,13 +42,13 @@ public class ServiceController {
 
         ServiceRequestDTO dto = objectMapper.readValue(serviceDtoJson, ServiceRequestDTO.class);
         ServiceResponseDTO response = autoService.createService(dto, imageFile);
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(StandardResponseDTO.builder()
                         .code(201)
                         .message("Service created successfully")
                         .data(response)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Update a service with optional new image (Admin only)")
@@ -61,13 +61,13 @@ public class ServiceController {
 
         ServiceRequestDTO dto = objectMapper.readValue(serviceDtoJson, ServiceRequestDTO.class);
         ServiceResponseDTO response = autoService.updateService(id, dto, imageFile);
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Service updated successfully")
                         .data(response)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Delete a service and its image (Admin only)")
@@ -75,13 +75,13 @@ public class ServiceController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<StandardResponseDTO> deleteService(@PathVariable UUID id) throws IOException {
         autoService.deleteService(id);
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Service deleted successfully")
                         .data(null)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Get all services")
@@ -89,13 +89,13 @@ public class ServiceController {
     @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> getAllServices() {
         List<ServiceResponseDTO> services = autoService.getAllServices();
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Services retrieved successfully")
                         .data(services)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Get services by category")
@@ -103,13 +103,13 @@ public class ServiceController {
     @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> getServicesByCategory(@PathVariable UUID categoryId) {
         List<ServiceResponseDTO> services = autoService.getServicesByCategory(categoryId);
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Services retrieved successfully")
                         .data(services)
-                        .build()
-        );
+                        .build());
     }
 
     @Operation(summary = "Get a service by ID")
@@ -117,12 +117,12 @@ public class ServiceController {
     @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
     public ResponseEntity<StandardResponseDTO> getServiceById(@PathVariable UUID id) {
         ServiceResponseDTO response = autoService.getServiceById(id);
-        return ResponseEntity.ok(
-                StandardResponseDTO.builder()
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
                         .code(200)
                         .message("Service retrieved successfully")
                         .data(response)
-                        .build()
-        );
+                        .build());
     }
 }
