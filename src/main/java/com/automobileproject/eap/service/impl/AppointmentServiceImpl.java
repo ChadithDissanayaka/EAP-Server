@@ -244,7 +244,34 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         appointment.setStatus(newStatus);
-        return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
+        Appointment saved = appointmentRepo.save(appointment);
+
+        // Notify assigned employees about the status change
+        String statusLabel = newStatus.name().replace("_", " ").toLowerCase();
+        String vehicleModel = saved.getVehicle().getModel();
+        notificationService.sendToEmployees(
+                getAssignedEmployeeEmails(saved),
+                "STATUS_UPDATED",
+                saved.getId().toString(),
+                "Appointment for " + vehicleModel + " is now " + statusLabel + "."
+        );
+
+        // Notify admins
+        notificationService.sendToAdmins(
+                "STATUS_UPDATED",
+                saved.getId().toString(),
+                "Appointment for " + vehicleModel + " is now " + statusLabel + "."
+        );
+
+        // Notify the appointment's customer
+        notificationService.sendToCustomer(
+                saved.getVehicle().getOwner().getEmail(),
+                "STATUS_UPDATED",
+                saved.getId().toString(),
+                "Your appointment for " + vehicleModel + " has been updated to " + statusLabel + "."
+        );
+
+        return appointmentMapper.toResponseDTO(saved);
     }
 
     @Override
@@ -271,7 +298,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setQuoteDetails(quoteDetails);
         appointment.setStatus(APPOINTMENT_STATUS_TYPES.AWAITING_CUSTOMER_APPROVAL);
         Appointment saved = appointmentRepo.save(appointment);
-        notificationService.sendCustomerNotification(
+        notificationService.sendToCustomer(
                 saved.getVehicle().getOwner().getEmail(),
                 "QUOTE_SUBMITTED",
                 saved.getId().toString(),
@@ -292,11 +319,22 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         appointment.getAssignedEmployees().add(employee);
         Appointment saved = appointmentRepo.save(appointment);
-        notificationService.sendEmployeeNotification(
+
+        // Notify only the assigned employee
+        notificationService.sendToEmployee(
+                employee.getEmail(),
                 "EMPLOYEE_ASSIGNED",
                 saved.getId().toString(),
                 "You have been assigned to appointment for " + saved.getVehicle().getModel() + "."
         );
+
+        // Notify admins
+        notificationService.sendToAdmins(
+                "EMPLOYEE_ASSIGNED",
+                saved.getId().toString(),
+                employee.getFirstName() + " " + employee.getLastName() + " has been assigned to appointment for " + saved.getVehicle().getModel() + "."
+        );
+
         return appointmentMapper.toResponseDTO(saved);
     }
 
@@ -321,7 +359,24 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .build();
         timeLogRepo.save(timeLog);
 
-        return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
+        Appointment saved = appointmentRepo.save(appointment);
+
+        // Notify admins
+        notificationService.sendToAdmins(
+                "APPOINTMENT_ACCEPTED",
+                saved.getId().toString(),
+                "Appointment for " + saved.getVehicle().getModel() + " has been accepted by " + employee.getFirstName() + " " + employee.getLastName() + "."
+        );
+
+        // Notify the customer
+        notificationService.sendToCustomer(
+                saved.getVehicle().getOwner().getEmail(),
+                "APPOINTMENT_ACCEPTED",
+                saved.getId().toString(),
+                "Your appointment for " + saved.getVehicle().getModel() + " is now in progress."
+        );
+
+        return appointmentMapper.toResponseDTO(saved);
     }
 
     @Override
@@ -336,12 +391,29 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         appointment.setStatus(APPOINTMENT_STATUS_TYPES.CANCELLED);
         Appointment saved = appointmentRepo.save(appointment);
-        notificationService.sendCustomerNotification(
+        // Notify the customer
+        notificationService.sendToCustomer(
                 saved.getVehicle().getOwner().getEmail(),
                 "APPOINTMENT_CANCELLED",
                 saved.getId().toString(),
                 "Your appointment for " + saved.getVehicle().getModel() + " has been cancelled."
         );
+
+        // Notify assigned employees
+        notificationService.sendToEmployees(
+                getAssignedEmployeeEmails(saved),
+                "APPOINTMENT_CANCELLED",
+                saved.getId().toString(),
+                "Appointment for " + saved.getVehicle().getModel() + " has been cancelled."
+        );
+
+        // Notify admins
+        notificationService.sendToAdmins(
+                "APPOINTMENT_CANCELLED",
+                saved.getId().toString(),
+                "Appointment for " + saved.getVehicle().getModel() + " has been cancelled."
+        );
+
         return appointmentMapper.toResponseDTO(saved);
     }
 
@@ -370,7 +442,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setQuoteDetails(rejectionReason);
         appointment.setStatus(APPOINTMENT_STATUS_TYPES.REJECTED);
         Appointment saved = appointmentRepo.save(appointment);
-        notificationService.sendCustomerNotification(
+        notificationService.sendToCustomer(
                 saved.getVehicle().getOwner().getEmail(),
                 "MODIFICATION_REJECTED",
                 saved.getId().toString(),
@@ -395,11 +467,21 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setQuoteApproved(true);
         appointment.setStatus(APPOINTMENT_STATUS_TYPES.SCHEDULED);
         Appointment saved = appointmentRepo.save(appointment);
-        notificationService.sendEmployeeNotification(
+        // Notify assigned employees
+        notificationService.sendToEmployees(
+                getAssignedEmployeeEmails(saved),
                 "QUOTE_APPROVED",
                 saved.getId().toString(),
                 "Quote approved for modification on " + saved.getVehicle().getModel() + " by " + customer.getEmail() + "."
         );
+
+        // Notify admins
+        notificationService.sendToAdmins(
+                "QUOTE_APPROVED",
+                saved.getId().toString(),
+                "Quote approved for modification on " + saved.getVehicle().getModel() + " by " + customer.getEmail() + "."
+        );
+
         return appointmentMapper.toResponseDTO(saved);
     }
 
@@ -420,11 +502,21 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setQuoteDetails(rejectionReason);
         appointment.setStatus(APPOINTMENT_STATUS_TYPES.REJECTED);
         Appointment saved = appointmentRepo.save(appointment);
-        notificationService.sendEmployeeNotification(
+        // Notify assigned employees
+        notificationService.sendToEmployees(
+                getAssignedEmployeeEmails(saved),
                 "QUOTE_REJECTED",
                 saved.getId().toString(),
                 "Quote rejected for modification on " + saved.getVehicle().getModel() + " by " + customer.getEmail() + "."
         );
+
+        // Notify admins
+        notificationService.sendToAdmins(
+                "QUOTE_REJECTED",
+                saved.getId().toString(),
+                "Quote rejected for modification on " + saved.getVehicle().getModel() + " by " + customer.getEmail() + "."
+        );
+
         return appointmentMapper.toResponseDTO(saved);
     }
 
@@ -478,6 +570,12 @@ public class AppointmentServiceImpl implements AppointmentService {
     private List<AppointmentResponseDTO> mapList(List<Appointment> appointments) {
         return appointments.stream()
                 .map(appointmentMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    private List<String> getAssignedEmployeeEmails(Appointment appointment) {
+        return appointment.getAssignedEmployees().stream()
+                .map(User::getEmail)
                 .collect(Collectors.toList());
     }
 }
