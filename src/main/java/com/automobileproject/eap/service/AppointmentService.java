@@ -50,6 +50,12 @@ public interface AppointmentService {
 
     AppointmentResponseDTO cancelAppointment(UUID appointmentId);
 
+    AppointmentResponseDTO rejectModificationRequest(UUID id, String rejectionReason);
+
+    AppointmentResponseDTO approveQuote(UUID id, String customerEmail);
+
+    AppointmentResponseDTO rejectQuote(UUID id, String rejectionReason, String customerEmail);
+
     List<AppointmentSlotResponseDTO> getAvailableSlots(LocalDate date, SESSION_PERIOD_TYPES period);
 
     List<AppointmentSlotResponseDTO> getAllSlotTemplates();

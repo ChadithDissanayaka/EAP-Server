@@ -166,8 +166,14 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentResponseDTO> getEmployeeInProgressAppointments(String employeeEmail) {
-        return mapList(appointmentRepo.findByAssignedEmployeesContainingAndStatus(
-                findUserByEmail(employeeEmail), APPOINTMENT_STATUS_TYPES.IN_PROGRESS));
+        User employee = findUserByEmail(employeeEmail);
+        List<Appointment> scheduled = appointmentRepo.findByAssignedEmployeesContainingAndStatus(
+                employee, APPOINTMENT_STATUS_TYPES.SCHEDULED);
+        List<Appointment> inProgress = appointmentRepo.findByAssignedEmployeesContainingAndStatus(
+                employee, APPOINTMENT_STATUS_TYPES.IN_PROGRESS);
+        List<Appointment> combined = new ArrayList<>(scheduled);
+        combined.addAll(inProgress);
+        return mapList(combined);
     }
 
     @Override
@@ -207,6 +213,19 @@ public class AppointmentServiceImpl implements AppointmentService {
                 tl.setNotes(tl.getNotes() != null ? tl.getNotes() + suffix : suffix.trim());
                 timeLogRepo.save(tl);
             }
+        }
+
+        if (currentStatus == APPOINTMENT_STATUS_TYPES.SCHEDULED &&
+                newStatus == APPOINTMENT_STATUS_TYPES.IN_PROGRESS &&
+                !appointment.getAssignedEmployees().isEmpty()) {
+            User employee = appointment.getAssignedEmployees().iterator().next();
+            TimeLog tl = TimeLog.builder()
+                    .appointment(appointment)
+                    .employee(employee)
+                    .startTime(OffsetDateTime.now())
+                    .notes("Work started on appointment")
+                    .build();
+            timeLogRepo.save(tl);
         }
 
         if (currentStatus == APPOINTMENT_STATUS_TYPES.AWAITING_PARTS &&
@@ -313,6 +332,59 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public List<AppointmentSlotResponseDTO> getAllSlotTemplates() {
         return appointmentSlotService.getAllSlotTemplates();
+    }
+
+    @Override
+    @Transactional
+    public AppointmentResponseDTO rejectModificationRequest(UUID id, String rejectionReason) {
+        Appointment appointment = findAppointmentById(id);
+        if (appointment.getAppointmentType() != APPOINTMENT_TYPE_TYPES.MODIFICATION_PROJECT) {
+            throw new ValidationException("Only modification projects can be rejected.");
+        }
+        if (appointment.getStatus() != APPOINTMENT_STATUS_TYPES.QUOTE_REQUESTED) {
+            throw new ValidationException("Modification request can only be rejected when status is QUOTE_REQUESTED.");
+        }
+
+        appointment.setQuoteDetails(rejectionReason);
+        appointment.setStatus(APPOINTMENT_STATUS_TYPES.REJECTED);
+        return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
+    }
+
+    @Override
+    @Transactional
+    public AppointmentResponseDTO approveQuote(UUID id, String customerEmail) {
+        Appointment appointment = findAppointmentById(id);
+        User customer = findUserByEmail(customerEmail);
+
+        if (!appointment.getVehicle().getOwner().getId().equals(customer.getId())) {
+            throw new AccessDeniedException("You do not own this vehicle.");
+        }
+        if (appointment.getStatus() != APPOINTMENT_STATUS_TYPES.AWAITING_CUSTOMER_APPROVAL) {
+            throw new ValidationException("Quote can only be approved when status is AWAITING_CUSTOMER_APPROVAL.");
+        }
+
+        appointment.setQuoteApproved(true);
+        appointment.setStatus(APPOINTMENT_STATUS_TYPES.SCHEDULED);
+        return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
+    }
+
+    @Override
+    @Transactional
+    public AppointmentResponseDTO rejectQuote(UUID id, String rejectionReason, String customerEmail) {
+        Appointment appointment = findAppointmentById(id);
+        User customer = findUserByEmail(customerEmail);
+
+        if (!appointment.getVehicle().getOwner().getId().equals(customer.getId())) {
+            throw new AccessDeniedException("You do not own this vehicle.");
+        }
+        if (appointment.getStatus() != APPOINTMENT_STATUS_TYPES.AWAITING_CUSTOMER_APPROVAL) {
+            throw new ValidationException("Quote can only be rejected when status is AWAITING_CUSTOMER_APPROVAL.");
+        }
+
+        appointment.setQuoteApproved(false);
+        appointment.setQuoteDetails(rejectionReason);
+        appointment.setStatus(APPOINTMENT_STATUS_TYPES.REJECTED);
+        return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
     }
 
     private User findUserByEmail(String email) {

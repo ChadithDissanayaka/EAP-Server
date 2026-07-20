@@ -306,4 +306,46 @@ public class AppointmentController {
                         .data(appointmentService.cancelAppointment(id))
                         .build());
     }
+
+    @Operation(summary = "Reject a modification request (Employee/Admin)")
+    @PostMapping("/{id}/reject-request")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
+    public ResponseEntity<StandardResponseDTO> rejectModificationRequest(
+            @PathVariable UUID id, @Valid @RequestBody RejectionRequestDTO dto) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Modification request rejected")
+                        .data(appointmentService.rejectModificationRequest(id, dto.getRejectionReason()))
+                        .build());
+    }
+
+    @Operation(summary = "Approve a quote for a modification project (Customer only)")
+    @PostMapping("/{id}/approve-quote")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<StandardResponseDTO> approveQuote(
+            @PathVariable UUID id, Authentication auth) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Quote approved and appointment scheduled")
+                        .data(appointmentService.approveQuote(id, auth.getName()))
+                        .build());
+    }
+
+    @Operation(summary = "Reject a quote for a modification project (Customer only)")
+    @PostMapping("/{id}/reject-quote")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<StandardResponseDTO> rejectQuote(
+            @PathVariable UUID id, @Valid @RequestBody RejectionRequestDTO dto, Authentication auth) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Quote rejected")
+                        .data(appointmentService.rejectQuote(id, dto.getRejectionReason(), auth.getName()))
+                        .build());
+    }
 }
