@@ -61,7 +61,7 @@ public class Appointment {
     private Set<Service> services = new HashSet<>();
 
     // Booked slot reference (slot-based bookings only)
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "slot_id", nullable = true)
     private AppointmentSlot appointmentSlot;
 

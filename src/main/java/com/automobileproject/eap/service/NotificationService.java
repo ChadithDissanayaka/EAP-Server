@@ -20,16 +20,32 @@ public class NotificationService {
     @EventListener
     @Async("taskExecutor")
     public void handleAppointmentCreated(AppointmentCreatedEvent event) {
-        log.info("Sending WebSocket notification for appointment: {}", event.getAppointmentId());
+        log.info("Sending WebSocket notification for new appointment: {}", event.getAppointmentId());
+        String msg = "New appointment booked by " + event.getCustomerEmail();
+        sendEmployeeNotification(event.getNotificationType().name(), event.getAppointmentId().toString(), msg);
+    }
 
+    public void sendEmployeeNotification(String type, String appointmentId, String message) {
+        log.info("Sending WebSocket notification to employees. Type: {}, Msg: {}", type, message);
         Map<String, Object> notification = Map.of(
-                "type", event.getNotificationType().name(),
-                "appointmentId", event.getAppointmentId().toString(),
-                "customerEmail", event.getCustomerEmail(),
-                "message", "New appointment booked by " + event.getCustomerEmail()
+                "id", java.util.UUID.randomUUID().toString(),
+                "type", type,
+                "appointmentId", appointmentId,
+                "message", message,
+                "timestamp", System.currentTimeMillis()
         );
-
         messagingTemplate.convertAndSend("/topic/notifications/employee", notification);
-        log.info("WebSocket notification sent for appointment: {}", event.getAppointmentId());
+    }
+
+    public void sendCustomerNotification(String recipientEmail, String type, String appointmentId, String message) {
+        log.info("Sending WebSocket notification to customer {}. Type: {}, Msg: {}", recipientEmail, type, message);
+        Map<String, Object> notification = Map.of(
+                "id", java.util.UUID.randomUUID().toString(),
+                "type", type,
+                "appointmentId", appointmentId,
+                "message", message,
+                "timestamp", System.currentTimeMillis()
+        );
+        messagingTemplate.convertAndSend("/topic/notifications/customer/" + recipientEmail, notification);
     }
 }

@@ -12,6 +12,7 @@ import com.automobileproject.eap.mapper.AppointmentMapper;
 import com.automobileproject.eap.repo.*;
 import com.automobileproject.eap.service.AppointmentService;
 import com.automobileproject.eap.service.AppointmentSlotService;
+import com.automobileproject.eap.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
@@ -36,6 +37,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final TimeLogRepo timeLogRepo;
     private final AppointmentSlotService appointmentSlotService;
     private final AppointmentMapper appointmentMapper;
+    private final NotificationService notificationService;
 
     private static final List<APPOINTMENT_STATUS_TYPES> ACTIVE_STATUSES = Arrays.asList(
             APPOINTMENT_STATUS_TYPES.IN_PROGRESS,
@@ -268,7 +270,14 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setQuotePrice(quotePrice);
         appointment.setQuoteDetails(quoteDetails);
         appointment.setStatus(APPOINTMENT_STATUS_TYPES.AWAITING_CUSTOMER_APPROVAL);
-        return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
+        Appointment saved = appointmentRepo.save(appointment);
+        notificationService.sendCustomerNotification(
+                saved.getVehicle().getOwner().getEmail(),
+                "QUOTE_SUBMITTED",
+                saved.getId().toString(),
+                "A new quote has been submitted for your modification request on " + saved.getVehicle().getModel() + "."
+        );
+        return appointmentMapper.toResponseDTO(saved);
     }
 
     @Override
@@ -282,7 +291,13 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         appointment.getAssignedEmployees().add(employee);
-        return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
+        Appointment saved = appointmentRepo.save(appointment);
+        notificationService.sendEmployeeNotification(
+                "EMPLOYEE_ASSIGNED",
+                saved.getId().toString(),
+                "You have been assigned to appointment for " + saved.getVehicle().getModel() + "."
+        );
+        return appointmentMapper.toResponseDTO(saved);
     }
 
     @Override
@@ -320,7 +335,14 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         appointment.setStatus(APPOINTMENT_STATUS_TYPES.CANCELLED);
-        return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
+        Appointment saved = appointmentRepo.save(appointment);
+        notificationService.sendCustomerNotification(
+                saved.getVehicle().getOwner().getEmail(),
+                "APPOINTMENT_CANCELLED",
+                saved.getId().toString(),
+                "Your appointment for " + saved.getVehicle().getModel() + " has been cancelled."
+        );
+        return appointmentMapper.toResponseDTO(saved);
     }
 
     @Override
@@ -347,7 +369,14 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         appointment.setQuoteDetails(rejectionReason);
         appointment.setStatus(APPOINTMENT_STATUS_TYPES.REJECTED);
-        return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
+        Appointment saved = appointmentRepo.save(appointment);
+        notificationService.sendCustomerNotification(
+                saved.getVehicle().getOwner().getEmail(),
+                "MODIFICATION_REJECTED",
+                saved.getId().toString(),
+                "Your modification request for " + saved.getVehicle().getModel() + " has been rejected."
+        );
+        return appointmentMapper.toResponseDTO(saved);
     }
 
     @Override
@@ -365,7 +394,13 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         appointment.setQuoteApproved(true);
         appointment.setStatus(APPOINTMENT_STATUS_TYPES.SCHEDULED);
-        return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
+        Appointment saved = appointmentRepo.save(appointment);
+        notificationService.sendEmployeeNotification(
+                "QUOTE_APPROVED",
+                saved.getId().toString(),
+                "Quote approved for modification on " + saved.getVehicle().getModel() + " by " + customer.getEmail() + "."
+        );
+        return appointmentMapper.toResponseDTO(saved);
     }
 
     @Override
@@ -384,7 +419,13 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setQuoteApproved(false);
         appointment.setQuoteDetails(rejectionReason);
         appointment.setStatus(APPOINTMENT_STATUS_TYPES.REJECTED);
-        return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
+        Appointment saved = appointmentRepo.save(appointment);
+        notificationService.sendEmployeeNotification(
+                "QUOTE_REJECTED",
+                saved.getId().toString(),
+                "Quote rejected for modification on " + saved.getVehicle().getModel() + " by " + customer.getEmail() + "."
+        );
+        return appointmentMapper.toResponseDTO(saved);
     }
 
     private User findUserByEmail(String email) {
