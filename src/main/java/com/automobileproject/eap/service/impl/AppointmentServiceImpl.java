@@ -258,6 +258,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Notify admins
         notificationService.sendToAdmins(
+                saved.getShop().getId(),
                 "STATUS_UPDATED",
                 saved.getId().toString(),
                 "Appointment for " + vehicleModel + " is now " + statusLabel + "."
@@ -313,8 +314,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = findAppointmentById(appointmentId);
         User employee = findUserById(employeeId);
 
-        if (employee.getRole() != ROLE_TYPES.EMPLOYEE && employee.getRole() != ROLE_TYPES.ADMIN) {
-            throw new ValidationException("Only employees or admins can be assigned to appointments.");
+        if (employee.getRole() != ROLE_TYPES.EMPLOYEE && employee.getRole() != ROLE_TYPES.SHOP_OWNER) {
+            throw new ValidationException("Only employees or shop owners can be assigned to appointments.");
         }
 
         appointment.getAssignedEmployees().add(employee);
@@ -330,6 +331,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Notify admins
         notificationService.sendToAdmins(
+                saved.getShop().getId(),
                 "EMPLOYEE_ASSIGNED",
                 saved.getId().toString(),
                 employee.getFirstName() + " " + employee.getLastName() + " has been assigned to appointment for " + saved.getVehicle().getModel() + "."
@@ -363,6 +365,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Notify admins
         notificationService.sendToAdmins(
+                saved.getShop().getId(),
                 "APPOINTMENT_ACCEPTED",
                 saved.getId().toString(),
                 "Appointment for " + saved.getVehicle().getModel() + " has been accepted by " + employee.getFirstName() + " " + employee.getLastName() + "."
@@ -409,6 +412,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Notify admins
         notificationService.sendToAdmins(
+                saved.getShop().getId(),
                 "APPOINTMENT_CANCELLED",
                 saved.getId().toString(),
                 "Appointment for " + saved.getVehicle().getModel() + " has been cancelled."
@@ -477,6 +481,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Notify admins
         notificationService.sendToAdmins(
+                saved.getShop().getId(),
                 "QUOTE_APPROVED",
                 saved.getId().toString(),
                 "Quote approved for modification on " + saved.getVehicle().getModel() + " by " + customer.getEmail() + "."
@@ -512,6 +517,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Notify admins
         notificationService.sendToAdmins(
+                saved.getShop().getId(),
                 "QUOTE_REJECTED",
                 saved.getId().toString(),
                 "Quote rejected for modification on " + saved.getVehicle().getModel() + " by " + customer.getEmail() + "."

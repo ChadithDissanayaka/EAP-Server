@@ -57,6 +57,10 @@ public class User implements UserDetails {
 
     private LocalDateTime passwordResetTokenExpiry;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "shop_id", nullable = true)
+    private Shop shop;
+
     @Column(nullable = false)
     @Builder.Default
     private boolean isActive = true;

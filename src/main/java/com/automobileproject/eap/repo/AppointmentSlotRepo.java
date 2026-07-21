@@ -15,4 +15,8 @@ public interface AppointmentSlotRepo extends JpaRepository<AppointmentSlot, UUID
     Optional<AppointmentSlot> findBySessionPeriodAndSlotNumber(SESSION_PERIOD_TYPES sessionPeriod, Integer slotNumber);
 
     boolean existsBySessionPeriodAndSlotNumber(SESSION_PERIOD_TYPES sessionPeriod, Integer slotNumber);
+
+    List<AppointmentSlot> findByShopId(UUID shopId);
+
+    boolean existsBySessionPeriodAndSlotNumberAndShopId(SESSION_PERIOD_TYPES sessionPeriod, Integer slotNumber, UUID shopId);
 }

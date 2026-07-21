@@ -3,12 +3,15 @@ package com.automobileproject.eap.api;
 import com.automobileproject.eap.dto.request.ForgotPasswordRequestDTO;
 import com.automobileproject.eap.dto.request.LoginRequestDTO;
 import com.automobileproject.eap.dto.request.ResetPasswordRequestDTO;
+import com.automobileproject.eap.dto.request.ShopRegistrationRequestDTO;
 import com.automobileproject.eap.dto.request.UserRequestDTO;
 import com.automobileproject.eap.dto.response.LoginResponseDTO;
+import com.automobileproject.eap.dto.response.ShopResponseDTO;
 import com.automobileproject.eap.dto.response.UserResponseDTO;
 import com.automobileproject.eap.entity.User;
 import com.automobileproject.eap.mapper.UserMapper;
 import com.automobileproject.eap.repo.UserRepo;
+import com.automobileproject.eap.service.ShopService;
 import com.automobileproject.eap.service.UserService;
 import com.automobileproject.eap.util.JwtUtil;
 import com.automobileproject.eap.util.StandardResponseDTO;
@@ -31,10 +34,24 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final UserService userService;
+    private final ShopService shopService;
     private final AuthenticationManager authenticationManager;
     private final UserRepo userRepo;
     private final UserMapper userMapper;
     private final JwtUtil jwtUtil;
+
+    @Operation(summary = "Register a new shop with owner account")
+    @PostMapping("/register-shop")
+    public ResponseEntity<StandardResponseDTO> registerShop(@Valid @RequestBody ShopRegistrationRequestDTO dto) {
+        ShopResponseDTO response = shopService.registerShop(dto);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(StandardResponseDTO.builder()
+                        .code(201)
+                        .message("Shop registered successfully. Please verify your email. Your shop is pending approval.")
+                        .data(response)
+                        .build());
+    }
 
     @Operation(summary = "Register a new user")
     @PostMapping("/register")

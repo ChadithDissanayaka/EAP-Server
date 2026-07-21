@@ -35,6 +35,8 @@ public class SecurityConfig {
     private static final String[] PUBLIC_URLS = {
             // Auth
             "/auth/**",
+            // Customer portal public endpoints
+            "/portal/**",
             // Appointment public endpoints
             "/appointments/available-slots",
             "/appointments/slot-templates",

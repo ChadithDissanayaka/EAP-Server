@@ -20,7 +20,7 @@ public class ServiceCategory {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String name;
 
     @Column(columnDefinition = "TEXT")
@@ -28,4 +28,8 @@ public class ServiceCategory {
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private List<Service> services;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shop_id", nullable = false)
+    private Shop shop;
 }
