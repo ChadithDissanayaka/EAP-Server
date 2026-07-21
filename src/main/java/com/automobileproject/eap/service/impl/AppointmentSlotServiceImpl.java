@@ -130,8 +130,24 @@ public class AppointmentSlotServiceImpl implements AppointmentSlotService {
     }
 
     @Override
+    public AppointmentSlot findSlotTemplate(SESSION_PERIOD_TYPES period, Integer slotNumber, UUID shopId) {
+        if (slotNumber < 1 || slotNumber > 5) {
+            throw new ValidationException("Slot number must be between 1 and 5");
+        }
+        return appointmentSlotRepo.findBySessionPeriodAndSlotNumberAndShopId(period, slotNumber, shopId)
+                .orElseThrow(() -> new EntryNotFoundException(
+                        String.format("Slot template not found: %s Slot %d for shop: %s", period, slotNumber, shopId)));
+    }
+
+    @Override
     public boolean isSlotAvailable(LocalDate date, SESSION_PERIOD_TYPES period, Integer slotNumber) {
         AppointmentSlot slot = findSlotTemplate(period, slotNumber);
+        return !appointmentRepo.isSlotBookedOnDate(slot.getId(), date);
+    }
+
+    @Override
+    public boolean isSlotAvailable(LocalDate date, SESSION_PERIOD_TYPES period, Integer slotNumber, UUID shopId) {
+        AppointmentSlot slot = findSlotTemplate(period, slotNumber, shopId);
         return !appointmentRepo.isSlotBookedOnDate(slot.getId(), date);
     }
 

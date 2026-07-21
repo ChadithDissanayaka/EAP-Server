@@ -27,7 +27,11 @@ public interface AppointmentSlotService {
 
     AppointmentSlot findSlotTemplate(SESSION_PERIOD_TYPES period, Integer slotNumber);
 
+    AppointmentSlot findSlotTemplate(SESSION_PERIOD_TYPES period, Integer slotNumber, UUID shopId);
+
     boolean isSlotAvailable(LocalDate date, SESSION_PERIOD_TYPES period, Integer slotNumber);
+
+    boolean isSlotAvailable(LocalDate date, SESSION_PERIOD_TYPES period, Integer slotNumber, UUID shopId);
 
     Long countAvailableSlots(LocalDate date);
 

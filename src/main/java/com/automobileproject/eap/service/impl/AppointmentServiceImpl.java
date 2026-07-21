@@ -62,6 +62,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .customerNotes(dto.getCustomerNotes())
                 .appointmentType(APPOINTMENT_TYPE_TYPES.STANDARD_SERVICE)
                 .status(APPOINTMENT_STATUS_TYPES.SCHEDULED)
+                .shop(vehicle.getShop())
                 .build();
 
         return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
@@ -79,9 +80,13 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Set<com.automobileproject.eap.entity.Service> services = fetchServices(dto.getServiceIds());
 
-        AppointmentSlot slot = appointmentSlotService.findSlotTemplate(dto.getSessionPeriod(), dto.getSlotNumber());
+        AppointmentSlot slot = appointmentSlotService.findSlotTemplate(
+                dto.getSessionPeriod(),
+                dto.getSlotNumber(),
+                vehicle.getShop().getId()
+        );
 
-        if (!appointmentSlotService.isSlotAvailable(dto.getAppointmentDate(), dto.getSessionPeriod(), dto.getSlotNumber())) {
+        if (!appointmentSlotService.isSlotAvailable(dto.getAppointmentDate(), dto.getSessionPeriod(), dto.getSlotNumber(), vehicle.getShop().getId())) {
             throw new ValidationException(String.format(
                     "The requested slot (%s Slot %d) is already booked on %s. Please choose another slot.",
                     dto.getSessionPeriod(), dto.getSlotNumber(), dto.getAppointmentDate()));
@@ -102,6 +107,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .customerNotes(dto.getCustomerNotes())
                 .appointmentType(APPOINTMENT_TYPE_TYPES.STANDARD_SERVICE)
                 .status(APPOINTMENT_STATUS_TYPES.SCHEDULED)
+                .shop(vehicle.getShop())
                 .build();
 
         return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
@@ -119,6 +125,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .appointmentDateTime(dto.getAppointmentDateTime())
                 .customerNotes(dto.getCustomerNotes())
                 .appointmentType(APPOINTMENT_TYPE_TYPES.MODIFICATION_PROJECT)
+                .shop(vehicle.getShop())
                 .build();
 
         return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
