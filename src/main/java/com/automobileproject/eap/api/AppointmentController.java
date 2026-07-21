@@ -299,16 +299,16 @@ public class AppointmentController {
                                                 .build());
         }
 
-        @Operation(summary = "Cancel an appointment (Employee/Admin)")
+        @Operation(summary = "Cancel an appointment")
         @PostMapping("/{id}/cancel")
-        @PreAuthorize("hasAnyRole('EMPLOYEE', 'SHOP_OWNER')")
-        public ResponseEntity<StandardResponseDTO> cancelAppointment(@PathVariable UUID id) {
+        @PreAuthorize("hasAnyRole('EMPLOYEE', 'SHOP_OWNER', 'CUSTOMER')")
+        public ResponseEntity<StandardResponseDTO> cancelAppointment(@PathVariable UUID id, Authentication auth) {
                 return ResponseEntity
                                 .status(HttpStatus.OK)
                                 .body(StandardResponseDTO.builder()
                                                 .code(200)
                                                 .message("Appointment cancelled")
-                                                .data(appointmentService.cancelAppointment(id))
+                                                .data(appointmentService.cancelAppointment(id, auth.getName()))
                                                 .build());
         }
 

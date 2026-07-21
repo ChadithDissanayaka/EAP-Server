@@ -391,12 +391,37 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public AppointmentResponseDTO cancelAppointment(UUID appointmentId) {
+    public AppointmentResponseDTO cancelAppointment(UUID appointmentId, String userEmail) {
         Appointment appointment = findAppointmentById(appointmentId);
+        User user = findUserByEmail(userEmail);
 
         if (appointment.getStatus() == APPOINTMENT_STATUS_TYPES.COMPLETED ||
                 appointment.getStatus() == APPOINTMENT_STATUS_TYPES.CANCELLED) {
             throw new ValidationException("Cannot cancel a completed or already cancelled appointment.");
+        }
+
+        // If the user is a CUSTOMER, check permissions and conditions
+        if (user.getRole() == ROLE_TYPES.CUSTOMER) {
+            // Check ownership
+            if (!appointment.getVehicle().getOwner().getEmail().equalsIgnoreCase(userEmail)) {
+                throw new AccessDeniedException("You do not own this vehicle/appointment.");
+            }
+
+            // Specific rules for cancellation:
+            if (appointment.getAppointmentType() == APPOINTMENT_TYPE_TYPES.STANDARD_SERVICE) {
+                // Customer can cancel standard service only until an employee is assigned
+                if (!appointment.getAssignedEmployees().isEmpty()) {
+                    throw new ValidationException("Cannot cancel appointment after an employee has been assigned.");
+                }
+                if (appointment.getStatus() != APPOINTMENT_STATUS_TYPES.SCHEDULED) {
+                    throw new ValidationException("Cannot cancel appointment when status is " + appointment.getStatus());
+                }
+            } else if (appointment.getAppointmentType() == APPOINTMENT_TYPE_TYPES.MODIFICATION_PROJECT) {
+                // Customer can cancel modification project only until shop owner sends quotation
+                if (appointment.getStatus() != APPOINTMENT_STATUS_TYPES.QUOTE_REQUESTED) {
+                    throw new ValidationException("Cannot cancel modification project after quotation has been received/processed.");
+                }
+            }
         }
 
         appointment.setStatus(APPOINTMENT_STATUS_TYPES.CANCELLED);
