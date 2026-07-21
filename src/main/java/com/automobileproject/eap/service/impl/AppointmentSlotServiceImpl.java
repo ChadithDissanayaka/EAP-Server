@@ -4,6 +4,7 @@ import com.automobileproject.eap.dto.request.AppointmentSlotRequestDTO;
 import com.automobileproject.eap.dto.response.AppointmentSlotResponseDTO;
 import com.automobileproject.eap.entity.AppointmentSlot;
 import com.automobileproject.eap.entity.SESSION_PERIOD_TYPES;
+import com.automobileproject.eap.exception.DuplicateEntryException;
 import com.automobileproject.eap.exception.EntryNotFoundException;
 import com.automobileproject.eap.exception.ValidationException;
 import com.automobileproject.eap.mapper.AppointmentSlotMapper;
@@ -165,5 +166,39 @@ public class AppointmentSlotServiceImpl implements AppointmentSlotService {
                 .stream()
                 .filter(slot -> !appointmentRepo.isSlotBookedOnDate(slot.getId(), date))
                 .count();
+    }
+
+    @Override
+    @Transactional
+    public AppointmentSlotResponseDTO createSlotTemplate(AppointmentSlotRequestDTO dto) {
+        log.info("Creating new slot template: {} Slot {}", dto.getSessionPeriod(), dto.getSlotNumber());
+
+        if (appointmentSlotRepo.findBySessionPeriodAndSlotNumber(dto.getSessionPeriod(), dto.getSlotNumber()).isPresent()) {
+            throw new DuplicateEntryException(
+                    String.format("Slot template already exists for %s Slot %d", dto.getSessionPeriod(), dto.getSlotNumber()));
+        }
+
+        AppointmentSlot slot = AppointmentSlot.builder()
+                .sessionPeriod(dto.getSessionPeriod())
+                .slotNumber(dto.getSlotNumber())
+                .startTime(dto.getStartTime())
+                .endTime(dto.getEndTime())
+                .build();
+
+        AppointmentSlot savedSlot = appointmentSlotRepo.save(slot);
+        log.info("Slot template created successfully with ID: {}", savedSlot.getId());
+
+        return appointmentSlotMapper.toResponseDTO(savedSlot);
+    }
+
+    @Override
+    @Transactional
+    public void deleteSlotTemplate(UUID id) {
+        log.info("Deleting slot template: {}", id);
+        AppointmentSlot slot = appointmentSlotRepo.findById(id)
+                .orElseThrow(() -> new EntryNotFoundException("Slot template not found with ID: " + id));
+
+        appointmentSlotRepo.delete(slot);
+        log.info("Slot template deleted successfully");
     }
 }

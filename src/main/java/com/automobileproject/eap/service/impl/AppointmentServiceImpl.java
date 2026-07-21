@@ -395,6 +395,12 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = findAppointmentById(appointmentId);
         User user = findUserByEmail(userEmail);
 
+        if (!isEmployeeOrAdmin) {
+            if (!appointment.getVehicle().getOwner().getEmail().equalsIgnoreCase(userEmail)) {
+                throw new ValidationException("You are not authorized to cancel this appointment.");
+            }
+        }
+
         if (appointment.getStatus() == APPOINTMENT_STATUS_TYPES.COMPLETED ||
                 appointment.getStatus() == APPOINTMENT_STATUS_TYPES.CANCELLED) {
             throw new ValidationException("Cannot cancel a completed or already cancelled appointment.");
