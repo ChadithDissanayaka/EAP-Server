@@ -1,10 +1,12 @@
 package com.automobileproject.eap.service;
 
+import com.automobileproject.eap.dto.request.AppointmentSlotRequestDTO;
 import com.automobileproject.eap.dto.response.AppointmentSlotResponseDTO;
 import com.automobileproject.eap.entity.AppointmentSlot;
 import com.automobileproject.eap.entity.SESSION_PERIOD_TYPES;
 
 import java.time.LocalDate;
+import java.util.UUID;
 import java.util.List;
 
 public interface AppointmentSlotService {
@@ -24,4 +26,8 @@ public interface AppointmentSlotService {
     Long countAvailableSlots(LocalDate date);
 
     Long countAvailableSlotsByPeriod(LocalDate date, SESSION_PERIOD_TYPES period);
+
+    AppointmentSlotResponseDTO createSlotTemplate(AppointmentSlotRequestDTO dto);
+
+    void deleteSlotTemplate(UUID id);
 }

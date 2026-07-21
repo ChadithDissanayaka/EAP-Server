@@ -3,8 +3,10 @@ package com.automobileproject.eap.service;
 import com.automobileproject.eap.dto.request.UserRequestDTO;
 import com.automobileproject.eap.dto.response.UserResponseDTO;
 import com.automobileproject.eap.dto.response.EmployeeResponseDTO;
+import com.automobileproject.eap.entity.ROLE_TYPES;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface UserService {
 
@@ -23,4 +25,10 @@ public interface UserService {
     void validatePasswordResetToken(String token);
 
     List<EmployeeResponseDTO> getActiveEmployees();
+
+    List<UserResponseDTO> getUsersByRole(ROLE_TYPES role);
+
+    UserResponseDTO createEmployee(UserRequestDTO dto);
+
+    void toggleUserStatus(UUID id);
 }

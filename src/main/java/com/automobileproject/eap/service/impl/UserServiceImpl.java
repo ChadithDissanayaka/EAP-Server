@@ -151,4 +151,48 @@ public class UserServiceImpl implements UserService {
                 .map(userMapper::toEmployeeResponseDTO)
                 .toList();
     }
+
+    @Override
+    public List<UserResponseDTO> getUsersByRole(ROLE_TYPES role) {
+        return userRepo.findByRole(role)
+                .stream()
+                .map(userMapper::toResponseDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDTO createEmployee(UserRequestDTO dto) {
+        log.info("Admin creating employee with email: {}", dto.getEmail());
+
+        if (userRepo.findByUsername(dto.getUsername()).isPresent()) {
+            throw new DuplicateEntryException("Username already exists: " + dto.getUsername());
+        }
+        if (userRepo.findByEmail(dto.getEmail()).isPresent()) {
+            throw new DuplicateEntryException("Email already registered: " + dto.getEmail());
+        }
+
+        User user = userMapper.toEntity(dto);
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setRole(ROLE_TYPES.EMPLOYEE);
+        user.setEmailVerified(true);
+        user.setActive(true);
+
+        User savedUser = userRepo.save(user);
+        log.info("Employee created successfully with ID: {}", savedUser.getId());
+
+        return userMapper.toResponseDTO(savedUser);
+    }
+
+    @Override
+    @Transactional
+    public void toggleUserStatus(UUID id) {
+        log.info("Admin toggling user status for ID: {}", id);
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new EntryNotFoundException("User not found with ID: " + id));
+
+        user.setActive(!user.isActive());
+        userRepo.save(user);
+        log.info("User status toggled. New state for ID {}: isActive={}", id, user.isActive());
+    }
 }

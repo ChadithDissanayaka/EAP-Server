@@ -1,6 +1,7 @@
 package com.automobileproject.eap.api;
 
 import com.automobileproject.eap.config.OpenApiConfig;
+import com.automobileproject.eap.dto.request.AppointmentSlotRequestDTO;
 import com.automobileproject.eap.dto.response.AppointmentSlotResponseDTO;
 import com.automobileproject.eap.entity.SESSION_PERIOD_TYPES;
 import com.automobileproject.eap.service.AppointmentSlotService;
@@ -12,11 +13,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -118,6 +119,33 @@ public class AppointmentSlotController {
                         .code(200)
                         .message("Slot templates retrieved successfully")
                         .data(templates)
+                        .build());
+    }
+
+    @Operation(summary = "Create a new slot template (Admin only)")
+    @PostMapping("/templates")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<StandardResponseDTO> createSlotTemplate(@RequestBody @Valid AppointmentSlotRequestDTO dto) {
+        AppointmentSlotResponseDTO template = appointmentSlotService.createSlotTemplate(dto);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(StandardResponseDTO.builder()
+                        .code(201)
+                        .message("Slot template created successfully")
+                        .data(template)
+                        .build());
+    }
+
+    @Operation(summary = "Delete a slot template (Admin only)")
+    @DeleteMapping("/templates/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<StandardResponseDTO> deleteSlotTemplate(@PathVariable UUID id) {
+        appointmentSlotService.deleteSlotTemplate(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(StandardResponseDTO.builder()
+                        .code(200)
+                        .message("Slot template deleted successfully")
                         .build());
     }
 }
