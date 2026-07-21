@@ -29,95 +29,93 @@ import java.util.Map;
 @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
 public class AppointmentSlotController {
 
-    private final AppointmentSlotService appointmentSlotService;
+        private final AppointmentSlotService appointmentSlotService;
 
-    @Operation(summary = "Get all available slots for a specific date (public)")
-    @GetMapping("/available")
-    public ResponseEntity<StandardResponseDTO> getAvailableSlots(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        @Operation(summary = "Get all available slots for a specific date (public)")
+        @GetMapping("/available")
+        public ResponseEntity<StandardResponseDTO> getAvailableSlots(
+                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
-        List<AppointmentSlotResponseDTO> slots = appointmentSlotService.getAvailableSlotsForDate(date);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(StandardResponseDTO.builder()
-                        .code(200)
-                        .message("Available slots retrieved successfully")
-                        .data(slots)
-                        .build());
-    }
+                List<AppointmentSlotResponseDTO> slots = appointmentSlotService.getAvailableSlotsForDate(date);
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Available slots retrieved successfully")
+                                                .data(slots)
+                                                .build());
+        }
 
-    @Operation(summary = "Get available slots for a specific date and session period (public)")
-    @GetMapping("/available/by-period")
-    public ResponseEntity<StandardResponseDTO> getAvailableSlotsByPeriod(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam SESSION_PERIOD_TYPES period) {
+        @Operation(summary = "Get available slots for a specific date and session period (public)")
+        @GetMapping("/available/by-period")
+        public ResponseEntity<StandardResponseDTO> getAvailableSlotsByPeriod(
+                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                        @RequestParam SESSION_PERIOD_TYPES period) {
 
-        List<AppointmentSlotResponseDTO> slots = appointmentSlotService.getAvailableSlotsByPeriod(date, period);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(StandardResponseDTO.builder()
-                        .code(200)
-                        .message("Available slots for period retrieved successfully")
-                        .data(slots)
-                        .build());
-    }
+                List<AppointmentSlotResponseDTO> slots = appointmentSlotService.getAvailableSlotsByPeriod(date, period);
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Available slots for period retrieved successfully")
+                                                .data(slots)
+                                                .build());
+        }
 
-    @Operation(summary = "Check if a specific slot is available on a date (public)")
-    @GetMapping("/check-availability")
-    public ResponseEntity<StandardResponseDTO> checkSlotAvailability(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam SESSION_PERIOD_TYPES period,
-            @RequestParam Integer slotNumber) {
+        @Operation(summary = "Check if a specific slot is available on a date (public)")
+        @GetMapping("/check-availability")
+        public ResponseEntity<StandardResponseDTO> checkSlotAvailability(
+                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                        @RequestParam SESSION_PERIOD_TYPES period,
+                        @RequestParam Integer slotNumber) {
 
-        boolean available = appointmentSlotService.isSlotAvailable(date, period, slotNumber);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(StandardResponseDTO.builder()
-                        .code(200)
-                        .message("Slot availability checked successfully")
-                        .data(Map.of(
-                                "date", date.toString(),
-                                "period", period.name(),
-                                "slotNumber", slotNumber,
-                                "available", available
-                        ))
-                        .build());
-    }
+                boolean available = appointmentSlotService.isSlotAvailable(date, period, slotNumber);
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Slot availability checked successfully")
+                                                .data(Map.of(
+                                                                "date", date.toString(),
+                                                                "period", period.name(),
+                                                                "slotNumber", slotNumber,
+                                                                "available", available))
+                                                .build());
+        }
 
-    @Operation(summary = "Get count of available slots for a date (public)")
-    @GetMapping("/count")
-    public ResponseEntity<StandardResponseDTO> getAvailableSlotCount(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) SESSION_PERIOD_TYPES period) {
+        @Operation(summary = "Get count of available slots for a date (public)")
+        @GetMapping("/count")
+        public ResponseEntity<StandardResponseDTO> getAvailableSlotCount(
+                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                        @RequestParam(required = false) SESSION_PERIOD_TYPES period) {
 
-        Long count = (period != null)
-                ? appointmentSlotService.countAvailableSlotsByPeriod(date, period)
-                : appointmentSlotService.countAvailableSlots(date);
+                Long count = (period != null)
+                                ? appointmentSlotService.countAvailableSlotsByPeriod(date, period)
+                                : appointmentSlotService.countAvailableSlots(date);
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(StandardResponseDTO.builder()
-                        .code(200)
-                        .message("Slot count retrieved successfully")
-                        .data(Map.of(
-                                "date", date.toString(),
-                                "period", period != null ? period.name() : "ALL",
-                                "availableSlots", count
-                        ))
-                        .build());
-    }
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Slot count retrieved successfully")
+                                                .data(Map.of(
+                                                                "date", date.toString(),
+                                                                "period", period != null ? period.name() : "ALL",
+                                                                "availableSlots", count))
+                                                .build());
+        }
 
-    @Operation(summary = "Get all slot templates (Employee/Admin only)")
-    @GetMapping("/templates")
-    @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
-    public ResponseEntity<StandardResponseDTO> getAllSlotTemplates() {
-        List<AppointmentSlotResponseDTO> templates = appointmentSlotService.getAllSlotTemplates();
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(StandardResponseDTO.builder()
-                        .code(200)
-                        .message("Slot templates retrieved successfully")
-                        .data(templates)
-                        .build());
-    }
+        @Operation(summary = "Get all slot templates (Employee/Admin only)")
+        @GetMapping("/templates")
+        @PreAuthorize("hasAnyRole('EMPLOYEE', 'SHOP_OWNER')")
+        public ResponseEntity<StandardResponseDTO> getAllSlotTemplates() {
+                List<AppointmentSlotResponseDTO> templates = appointmentSlotService.getAllSlotTemplates();
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Slot templates retrieved successfully")
+                                                .data(templates)
+                                                .build());
+        }
 }

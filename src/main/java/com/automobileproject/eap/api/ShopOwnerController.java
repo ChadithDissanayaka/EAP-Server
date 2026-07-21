@@ -2,6 +2,7 @@ package com.automobileproject.eap.api;
 
 import com.automobileproject.eap.dto.request.EmployeeCreateRequestDTO;
 import com.automobileproject.eap.dto.request.ShopPageRequestDTO;
+import com.automobileproject.eap.dto.request.UpdateShopSlugRequestDTO;
 import com.automobileproject.eap.dto.response.ShopPageResponseDTO;
 import com.automobileproject.eap.dto.response.ShopResponseDTO;
 import com.automobileproject.eap.dto.response.UserResponseDTO;
@@ -168,5 +169,18 @@ public class ShopOwnerController {
             throw new ValidationException("User is not associated with any shop");
         }
         return user.getShop().getId();
+    }
+
+    @Operation(summary = "Update own shop's portal URL link (slug)")
+    @PutMapping("/shop/slug")
+    public ResponseEntity<StandardResponseDTO> updateShopSlug(
+            @Valid @RequestBody UpdateShopSlugRequestDTO dto, Authentication auth) {
+        UUID shopId = extractShopId(auth);
+        ShopResponseDTO shop = shopService.updateSlug(shopId, dto.getSlug());
+        return ResponseEntity.ok(StandardResponseDTO.builder()
+                .code(200)
+                .message("Portal link updated successfully")
+                .data(shop)
+                .build());
     }
 }

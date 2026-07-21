@@ -22,7 +22,7 @@ public class UserController {
 
     @Operation(summary = "Get all active employees (Employee/Admin)")
     @GetMapping("/employees")
-    @PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'SHOP_OWNER')")
     public ResponseEntity<StandardResponseDTO> getEmployees() {
         return ResponseEntity
                 .status(HttpStatus.OK)

@@ -31,4 +31,6 @@ public interface ShopService {
     long countByStatus(String status);
 
     long countAll();
+
+    ShopResponseDTO updateSlug(UUID shopId, String slug);
 }

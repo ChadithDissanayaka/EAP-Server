@@ -30,99 +30,99 @@ import java.util.UUID;
 @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
 public class ServiceController {
 
-    private final AutoService autoService;
-    private final ObjectMapper objectMapper;
+        private final AutoService autoService;
+        private final ObjectMapper objectMapper;
 
-    @Operation(summary = "Create a new service with optional image (Admin only)")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<StandardResponseDTO> createService(
-            @RequestParam("service") String serviceDtoJson,
-            @RequestParam(value = "image", required = false) MultipartFile imageFile) throws IOException {
+        @Operation(summary = "Create a new service with optional image (Admin only)")
+        @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        @PreAuthorize("hasRole('SHOP_OWNER')")
+        public ResponseEntity<StandardResponseDTO> createService(
+                        @RequestParam("service") String serviceDtoJson,
+                        @RequestParam(value = "image", required = false) MultipartFile imageFile) throws IOException {
 
-        ServiceRequestDTO dto = objectMapper.readValue(serviceDtoJson, ServiceRequestDTO.class);
-        ServiceResponseDTO response = autoService.createService(dto, imageFile);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(StandardResponseDTO.builder()
-                        .code(201)
-                        .message("Service created successfully")
-                        .data(response)
-                        .build());
-    }
+                ServiceRequestDTO dto = objectMapper.readValue(serviceDtoJson, ServiceRequestDTO.class);
+                ServiceResponseDTO response = autoService.createService(dto, imageFile);
+                return ResponseEntity
+                                .status(HttpStatus.CREATED)
+                                .body(StandardResponseDTO.builder()
+                                                .code(201)
+                                                .message("Service created successfully")
+                                                .data(response)
+                                                .build());
+        }
 
-    @Operation(summary = "Update a service with optional new image (Admin only)")
-    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<StandardResponseDTO> updateService(
-            @PathVariable UUID id,
-            @RequestParam("service") String serviceDtoJson,
-            @RequestParam(value = "image", required = false) MultipartFile imageFile) throws IOException {
+        @Operation(summary = "Update a service with optional new image (Admin only)")
+        @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        @PreAuthorize("hasRole('SHOP_OWNER')")
+        public ResponseEntity<StandardResponseDTO> updateService(
+                        @PathVariable UUID id,
+                        @RequestParam("service") String serviceDtoJson,
+                        @RequestParam(value = "image", required = false) MultipartFile imageFile) throws IOException {
 
-        ServiceRequestDTO dto = objectMapper.readValue(serviceDtoJson, ServiceRequestDTO.class);
-        ServiceResponseDTO response = autoService.updateService(id, dto, imageFile);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(StandardResponseDTO.builder()
-                        .code(200)
-                        .message("Service updated successfully")
-                        .data(response)
-                        .build());
-    }
+                ServiceRequestDTO dto = objectMapper.readValue(serviceDtoJson, ServiceRequestDTO.class);
+                ServiceResponseDTO response = autoService.updateService(id, dto, imageFile);
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Service updated successfully")
+                                                .data(response)
+                                                .build());
+        }
 
-    @Operation(summary = "Delete a service and its image (Admin only)")
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<StandardResponseDTO> deleteService(@PathVariable UUID id) throws IOException {
-        autoService.deleteService(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(StandardResponseDTO.builder()
-                        .code(200)
-                        .message("Service deleted successfully")
-                        .data(null)
-                        .build());
-    }
+        @Operation(summary = "Delete a service and its image (Admin only)")
+        @DeleteMapping("/{id}")
+        @PreAuthorize("hasRole('SHOP_OWNER')")
+        public ResponseEntity<StandardResponseDTO> deleteService(@PathVariable UUID id) throws IOException {
+                autoService.deleteService(id);
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Service deleted successfully")
+                                                .data(null)
+                                                .build());
+        }
 
-    @Operation(summary = "Get all services")
-    @GetMapping
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
-    public ResponseEntity<StandardResponseDTO> getAllServices() {
-        List<ServiceResponseDTO> services = autoService.getAllServices();
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(StandardResponseDTO.builder()
-                        .code(200)
-                        .message("Services retrieved successfully")
-                        .data(services)
-                        .build());
-    }
+        @Operation(summary = "Get all services")
+        @GetMapping
+        @PreAuthorize("hasAnyRole('CUSTOMER', 'SHOP_OWNER')")
+        public ResponseEntity<StandardResponseDTO> getAllServices() {
+                List<ServiceResponseDTO> services = autoService.getAllServices();
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Services retrieved successfully")
+                                                .data(services)
+                                                .build());
+        }
 
-    @Operation(summary = "Get services by category")
-    @GetMapping("/category/{categoryId}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
-    public ResponseEntity<StandardResponseDTO> getServicesByCategory(@PathVariable UUID categoryId) {
-        List<ServiceResponseDTO> services = autoService.getServicesByCategory(categoryId);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(StandardResponseDTO.builder()
-                        .code(200)
-                        .message("Services retrieved successfully")
-                        .data(services)
-                        .build());
-    }
+        @Operation(summary = "Get services by category")
+        @GetMapping("/category/{categoryId}")
+        @PreAuthorize("hasAnyRole('CUSTOMER', 'SHOP_OWNER')")
+        public ResponseEntity<StandardResponseDTO> getServicesByCategory(@PathVariable UUID categoryId) {
+                List<ServiceResponseDTO> services = autoService.getServicesByCategory(categoryId);
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Services retrieved successfully")
+                                                .data(services)
+                                                .build());
+        }
 
-    @Operation(summary = "Get a service by ID")
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
-    public ResponseEntity<StandardResponseDTO> getServiceById(@PathVariable UUID id) {
-        ServiceResponseDTO response = autoService.getServiceById(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(StandardResponseDTO.builder()
-                        .code(200)
-                        .message("Service retrieved successfully")
-                        .data(response)
-                        .build());
-    }
+        @Operation(summary = "Get a service by ID")
+        @GetMapping("/{id}")
+        @PreAuthorize("hasAnyRole('CUSTOMER', 'SHOP_OWNER')")
+        public ResponseEntity<StandardResponseDTO> getServiceById(@PathVariable UUID id) {
+                ServiceResponseDTO response = autoService.getServiceById(id);
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Service retrieved successfully")
+                                                .data(response)
+                                                .build());
+        }
 }

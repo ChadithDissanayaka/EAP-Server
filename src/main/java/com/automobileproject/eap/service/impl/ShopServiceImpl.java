@@ -231,4 +231,20 @@ public class ShopServiceImpl implements ShopService {
         }
         return slug;
     }
+
+    @Override
+    @Transactional
+    public ShopResponseDTO updateSlug(UUID shopId, String slug) {
+        Shop shop = shopRepo.findById(shopId)
+                .orElseThrow(() -> new EntryNotFoundException("Shop not found with ID: " + shopId));
+
+        if (!slug.equals(shop.getSlug()) && shopRepo.existsBySlug(slug)) {
+            throw new DuplicateEntryException("That portal link is already taken: " + slug);
+        }
+
+        shop.setSlug(slug);
+        Shop saved = shopRepo.save(shop);
+        log.info("Shop portal slug updated to '{}': {}", slug, shop.getName());
+        return shopMapper.toResponseDTO(saved);
+    }
 }
