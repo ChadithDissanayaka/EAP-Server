@@ -1,26 +1,30 @@
 package com.automobileproject.eap.api;
 
 import com.automobileproject.eap.config.OpenApiConfig;
+import com.automobileproject.eap.dto.request.AppointmentSlotRequestDTO;
 import com.automobileproject.eap.dto.response.AppointmentSlotResponseDTO;
 import com.automobileproject.eap.entity.SESSION_PERIOD_TYPES;
+import com.automobileproject.eap.entity.User;
+import com.automobileproject.eap.exception.ValidationException;
+import com.automobileproject.eap.repo.UserRepo;
 import com.automobileproject.eap.service.AppointmentSlotService;
 import com.automobileproject.eap.util.StandardResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/slots")
@@ -30,6 +34,7 @@ import java.util.Map;
 public class AppointmentSlotController {
 
         private final AppointmentSlotService appointmentSlotService;
+        private final UserRepo userRepo;
 
         @Operation(summary = "Get all available slots for a specific date (public)")
         @GetMapping("/available")
@@ -108,8 +113,9 @@ public class AppointmentSlotController {
         @Operation(summary = "Get all slot templates (Employee/Admin only)")
         @GetMapping("/templates")
         @PreAuthorize("hasAnyRole('EMPLOYEE', 'SHOP_OWNER')")
-        public ResponseEntity<StandardResponseDTO> getAllSlotTemplates() {
-                List<AppointmentSlotResponseDTO> templates = appointmentSlotService.getAllSlotTemplates();
+        public ResponseEntity<StandardResponseDTO> getAllSlotTemplates(Authentication auth) {
+                UUID shopId = extractShopId(auth);
+                List<AppointmentSlotResponseDTO> templates = appointmentSlotService.getSlotTemplatesByShop(shopId);
                 return ResponseEntity
                                 .status(HttpStatus.OK)
                                 .body(StandardResponseDTO.builder()
@@ -117,5 +123,47 @@ public class AppointmentSlotController {
                                                 .message("Slot templates retrieved successfully")
                                                 .data(templates)
                                                 .build());
+        }
+
+        @Operation(summary = "Create a slot template (Admin only)")
+        @PostMapping("/templates")
+        @PreAuthorize("hasRole('SHOP_OWNER')")
+        public ResponseEntity<StandardResponseDTO> createSlotTemplate(
+                        @Valid @RequestBody AppointmentSlotRequestDTO dto, Authentication auth) {
+                UUID shopId = extractShopId(auth);
+                AppointmentSlotResponseDTO template = appointmentSlotService.createSlotTemplate(shopId, dto);
+                return ResponseEntity
+                                .status(HttpStatus.CREATED)
+                                .body(StandardResponseDTO.builder()
+                                                .code(201)
+                                                .message("Slot template created successfully")
+                                                .data(template)
+                                                .build());
+        }
+
+        @Operation(summary = "Delete a slot template (Admin only)")
+        @DeleteMapping("/templates/{id}")
+        @PreAuthorize("hasRole('SHOP_OWNER')")
+        public ResponseEntity<StandardResponseDTO> deleteSlotTemplate(
+                        @PathVariable UUID id, Authentication auth) {
+                UUID shopId = extractShopId(auth);
+                appointmentSlotService.deleteSlotTemplate(id, shopId);
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Slot template deleted successfully")
+                                                .data(null)
+                                                .build());
+        }
+
+        private UUID extractShopId(Authentication auth) {
+                String email = auth.getName();
+                User user = userRepo.findByEmail(email)
+                                .orElseThrow(() -> new ValidationException("Authenticated user not found"));
+                if (user.getShop() == null) {
+                        throw new ValidationException("User is not associated with any shop");
+                }
+                return user.getShop().getId();
         }
 }

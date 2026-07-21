@@ -39,6 +39,7 @@ public class UserMapper {
                 .lastName(user.getLastName())
                 .phoneNumber(user.getPhoneNumber())
                 .emailVerified(user.getEmailVerified())
+                .isActive(user.isActive())
                 .build();
     }
 

@@ -16,6 +16,8 @@ public interface AppointmentRepo extends JpaRepository<Appointment, UUID> {
 
     boolean existsByVehicleIdAndStatusIn(UUID vehicleId, List<APPOINTMENT_STATUS_TYPES> statuses);
 
+    boolean existsByAppointmentSlotId(UUID slotId);
+
     List<Appointment> findByStatus(APPOINTMENT_STATUS_TYPES status);
 
     List<Appointment> findByVehicle_Owner(User owner);
