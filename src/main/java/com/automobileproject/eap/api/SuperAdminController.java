@@ -1,10 +1,14 @@
 package com.automobileproject.eap.api;
 
+import com.automobileproject.eap.dto.request.SubscriptionRequestReviewDTO;
 import com.automobileproject.eap.dto.response.ShopResponseDTO;
+import com.automobileproject.eap.dto.response.SubscriptionRequestResponseDTO;
 import com.automobileproject.eap.service.ShopService;
+import com.automobileproject.eap.service.SubscriptionRequestService;
 import com.automobileproject.eap.util.StandardResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +27,7 @@ import java.util.UUID;
 public class SuperAdminController {
 
     private final ShopService shopService;
+    private final SubscriptionRequestService subscriptionRequestService;
 
     @Operation(summary = "Get all shops")
     @GetMapping("/shops")
@@ -118,6 +123,31 @@ public class SuperAdminController {
                 .code(200)
                 .message("Stats retrieved successfully")
                 .data(stats)
+                .build());
+    }
+
+    // ── Subscription Change Requests Management ──────────────────────────────
+
+    @Operation(summary = "Get all shop subscription change requests")
+    @GetMapping("/subscription-requests")
+    public ResponseEntity<StandardResponseDTO> getAllSubscriptionRequests() {
+        List<SubscriptionRequestResponseDTO> requests = subscriptionRequestService.getAllRequests();
+        return ResponseEntity.ok(StandardResponseDTO.builder()
+                .code(200)
+                .message("Subscription requests retrieved successfully")
+                .data(requests)
+                .build());
+    }
+
+    @Operation(summary = "Review (approve/reject) a subscription change request")
+    @PutMapping("/subscription-requests/{id}/review")
+    public ResponseEntity<StandardResponseDTO> reviewSubscriptionRequest(
+            @PathVariable UUID id, @Valid @RequestBody SubscriptionRequestReviewDTO dto) {
+        SubscriptionRequestResponseDTO response = subscriptionRequestService.reviewRequest(id, dto);
+        return ResponseEntity.ok(StandardResponseDTO.builder()
+                .code(200)
+                .message("Subscription request reviewed successfully")
+                .data(response)
                 .build());
     }
 }

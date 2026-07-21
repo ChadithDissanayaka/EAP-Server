@@ -26,16 +26,21 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+import com.automobileproject.eap.dto.request.SubscriptionRequestCreateDTO;
+import com.automobileproject.eap.dto.response.SubscriptionRequestResponseDTO;
+import com.automobileproject.eap.service.SubscriptionRequestService;
+
 @RestController
 @RequestMapping("/shop-owner")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('SHOP_OWNER')")
-@Tag(name = "Shop Owner", description = "Shop owner management — employees, customers, shop page")
+@Tag(name = "Shop Owner", description = "Shop owner management — employees, customers, shop page, subscriptions")
 public class ShopOwnerController {
 
     private final UserService userService;
     private final ShopService shopService;
     private final ShopPageService shopPageService;
+    private final SubscriptionRequestService subscriptionRequestService;
     private final UserRepo userRepo;
 
     // ── Employee Management ─────────────────────────────────────────────────
@@ -181,6 +186,40 @@ public class ShopOwnerController {
                 .code(200)
                 .message("Portal link updated successfully")
                 .data(shop)
+                .build());
+    }
+
+    // ── Subscription Request & Communication ────────────────────────────────
+
+    @Operation(summary = "Request subscription plan change / communication with SaaS owner")
+    @PostMapping("/subscription-requests")
+    public ResponseEntity<StandardResponseDTO> createSubscriptionRequest(
+            @Valid @RequestBody SubscriptionRequestCreateDTO dto, Authentication auth) {
+        String email = auth.getName();
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new ValidationException("Authenticated user not found"));
+        if (user.getShop() == null) {
+            throw new ValidationException("User is not associated with any shop");
+        }
+        SubscriptionRequestResponseDTO response = subscriptionRequestService.createRequest(
+                user.getShop().getId(), user.getId(), dto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(StandardResponseDTO.builder()
+                        .code(201)
+                        .message("Subscription request submitted successfully")
+                        .data(response)
+                        .build());
+    }
+
+    @Operation(summary = "Get subscription change request history for own shop")
+    @GetMapping("/subscription-requests")
+    public ResponseEntity<StandardResponseDTO> getSubscriptionRequests(Authentication auth) {
+        UUID shopId = extractShopId(auth);
+        List<SubscriptionRequestResponseDTO> requests = subscriptionRequestService.getRequestsByShop(shopId);
+        return ResponseEntity.ok(StandardResponseDTO.builder()
+                .code(200)
+                .message("Subscription requests retrieved successfully")
+                .data(requests)
                 .build());
     }
 }
