@@ -62,6 +62,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .customerNotes(dto.getCustomerNotes())
                 .appointmentType(APPOINTMENT_TYPE_TYPES.STANDARD_SERVICE)
                 .status(APPOINTMENT_STATUS_TYPES.SCHEDULED)
+                .shop(vehicle.getShop())
                 .build();
 
         return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
@@ -79,9 +80,13 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Set<com.automobileproject.eap.entity.Service> services = fetchServices(dto.getServiceIds());
 
-        AppointmentSlot slot = appointmentSlotService.findSlotTemplate(dto.getSessionPeriod(), dto.getSlotNumber());
+        AppointmentSlot slot = appointmentSlotService.findSlotTemplate(
+                dto.getSessionPeriod(),
+                dto.getSlotNumber(),
+                vehicle.getShop().getId()
+        );
 
-        if (!appointmentSlotService.isSlotAvailable(dto.getAppointmentDate(), dto.getSessionPeriod(), dto.getSlotNumber())) {
+        if (!appointmentSlotService.isSlotAvailable(dto.getAppointmentDate(), dto.getSessionPeriod(), dto.getSlotNumber(), vehicle.getShop().getId())) {
             throw new ValidationException(String.format(
                     "The requested slot (%s Slot %d) is already booked on %s. Please choose another slot.",
                     dto.getSessionPeriod(), dto.getSlotNumber(), dto.getAppointmentDate()));
@@ -102,6 +107,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .customerNotes(dto.getCustomerNotes())
                 .appointmentType(APPOINTMENT_TYPE_TYPES.STANDARD_SERVICE)
                 .status(APPOINTMENT_STATUS_TYPES.SCHEDULED)
+                .shop(vehicle.getShop())
                 .build();
 
         return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
@@ -119,6 +125,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .appointmentDateTime(dto.getAppointmentDateTime())
                 .customerNotes(dto.getCustomerNotes())
                 .appointmentType(APPOINTMENT_TYPE_TYPES.MODIFICATION_PROJECT)
+                .shop(vehicle.getShop())
                 .build();
 
         return appointmentMapper.toResponseDTO(appointmentRepo.save(appointment));
@@ -258,6 +265,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Notify admins
         notificationService.sendToAdmins(
+                saved.getShop().getId(),
                 "STATUS_UPDATED",
                 saved.getId().toString(),
                 "Appointment for " + vehicleModel + " is now " + statusLabel + "."
@@ -313,8 +321,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = findAppointmentById(appointmentId);
         User employee = findUserById(employeeId);
 
-        if (employee.getRole() != ROLE_TYPES.EMPLOYEE && employee.getRole() != ROLE_TYPES.ADMIN) {
-            throw new ValidationException("Only employees or admins can be assigned to appointments.");
+        if (employee.getRole() != ROLE_TYPES.EMPLOYEE && employee.getRole() != ROLE_TYPES.SHOP_OWNER) {
+            throw new ValidationException("Only employees or shop owners can be assigned to appointments.");
         }
 
         appointment.getAssignedEmployees().add(employee);
@@ -330,6 +338,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Notify admins
         notificationService.sendToAdmins(
+                saved.getShop().getId(),
                 "EMPLOYEE_ASSIGNED",
                 saved.getId().toString(),
                 employee.getFirstName() + " " + employee.getLastName() + " has been assigned to appointment for " + saved.getVehicle().getModel() + "."
@@ -363,6 +372,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Notify admins
         notificationService.sendToAdmins(
+                saved.getShop().getId(),
                 "APPOINTMENT_ACCEPTED",
                 saved.getId().toString(),
                 "Appointment for " + saved.getVehicle().getModel() + " has been accepted by " + employee.getFirstName() + " " + employee.getLastName() + "."
@@ -381,8 +391,9 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public AppointmentResponseDTO cancelAppointment(UUID appointmentId, String userEmail, boolean isEmployeeOrAdmin) {
+    public AppointmentResponseDTO cancelAppointment(UUID appointmentId, String userEmail) {
         Appointment appointment = findAppointmentById(appointmentId);
+        User user = findUserByEmail(userEmail);
 
         if (!isEmployeeOrAdmin) {
             if (!appointment.getVehicle().getOwner().getEmail().equalsIgnoreCase(userEmail)) {
@@ -393,6 +404,30 @@ public class AppointmentServiceImpl implements AppointmentService {
         if (appointment.getStatus() == APPOINTMENT_STATUS_TYPES.COMPLETED ||
                 appointment.getStatus() == APPOINTMENT_STATUS_TYPES.CANCELLED) {
             throw new ValidationException("Cannot cancel a completed or already cancelled appointment.");
+        }
+
+        // If the user is a CUSTOMER, check permissions and conditions
+        if (user.getRole() == ROLE_TYPES.CUSTOMER) {
+            // Check ownership
+            if (!appointment.getVehicle().getOwner().getEmail().equalsIgnoreCase(userEmail)) {
+                throw new AccessDeniedException("You do not own this vehicle/appointment.");
+            }
+
+            // Specific rules for cancellation:
+            if (appointment.getAppointmentType() == APPOINTMENT_TYPE_TYPES.STANDARD_SERVICE) {
+                // Customer can cancel standard service only until an employee is assigned
+                if (!appointment.getAssignedEmployees().isEmpty()) {
+                    throw new ValidationException("Cannot cancel appointment after an employee has been assigned.");
+                }
+                if (appointment.getStatus() != APPOINTMENT_STATUS_TYPES.SCHEDULED) {
+                    throw new ValidationException("Cannot cancel appointment when status is " + appointment.getStatus());
+                }
+            } else if (appointment.getAppointmentType() == APPOINTMENT_TYPE_TYPES.MODIFICATION_PROJECT) {
+                // Customer can cancel modification project only until shop owner sends quotation
+                if (appointment.getStatus() != APPOINTMENT_STATUS_TYPES.QUOTE_REQUESTED) {
+                    throw new ValidationException("Cannot cancel modification project after quotation has been received/processed.");
+                }
+            }
         }
 
         appointment.setStatus(APPOINTMENT_STATUS_TYPES.CANCELLED);
@@ -415,6 +450,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Notify admins
         notificationService.sendToAdmins(
+                saved.getShop().getId(),
                 "APPOINTMENT_CANCELLED",
                 saved.getId().toString(),
                 "Appointment for " + saved.getVehicle().getModel() + " has been cancelled."
@@ -483,6 +519,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Notify admins
         notificationService.sendToAdmins(
+                saved.getShop().getId(),
                 "QUOTE_APPROVED",
                 saved.getId().toString(),
                 "Quote approved for modification on " + saved.getVehicle().getModel() + " by " + customer.getEmail() + "."
@@ -518,6 +555,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         // Notify admins
         notificationService.sendToAdmins(
+                saved.getShop().getId(),
                 "QUOTE_REJECTED",
                 saved.getId().toString(),
                 "Quote rejected for modification on " + saved.getVehicle().getModel() + " by " + customer.getEmail() + "."

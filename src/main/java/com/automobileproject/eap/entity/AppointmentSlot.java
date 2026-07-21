@@ -9,7 +9,7 @@ import java.util.UUID;
 @Entity
 @Table(
         name = "appointment_slots",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"session_period", "slot_number"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"session_period", "slot_number", "shop_id"})
 )
 @Getter
 @Setter
@@ -55,4 +55,8 @@ public class AppointmentSlot {
     public static LocalTime getDefaultEndTime(SESSION_PERIOD_TYPES period, Integer slotNumber) {
         return getDefaultStartTime(period, slotNumber).plusHours(1);
     }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shop_id", nullable = false)
+    private Shop shop;
 }

@@ -29,12 +29,17 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(key.getBytes());
     }
 
-    /** Generates a signed JWT with email, role, firstName, lastName as claims. */
+    /** Generates a signed JWT with email, role, firstName, lastName, and shop info as claims. */
     public String generateAccessToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", user.getRole().name());
         claims.put("firstName", user.getFirstName());
         claims.put("lastName", user.getLastName());
+
+        if (user.getShop() != null) {
+            claims.put("shopId", user.getShop().getId().toString());
+            claims.put("shopSlug", user.getShop().getSlug());
+        }
 
         Date now = new Date();
         return Jwts.builder()

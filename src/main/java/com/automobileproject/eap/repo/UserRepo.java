@@ -19,5 +19,9 @@ public interface UserRepo extends JpaRepository<User, UUID> {
     Optional<User> findByPasswordResetToken(String passwordResetToken);
 
     List<User> findByRole(ROLE_TYPES role);
+
+    List<User> findByShopIdAndRole(UUID shopId, ROLE_TYPES role);
+
+    List<User> findByShopId(UUID shopId);
 }
 

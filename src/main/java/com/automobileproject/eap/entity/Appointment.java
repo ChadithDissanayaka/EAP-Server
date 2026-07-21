@@ -75,6 +75,10 @@ public class Appointment {
     @Builder.Default
     private Set<User> assignedEmployees = new HashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shop_id", nullable = false)
+    private Shop shop;
+
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();

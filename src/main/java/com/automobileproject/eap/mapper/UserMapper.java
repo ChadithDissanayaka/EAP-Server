@@ -47,7 +47,7 @@ public class UserMapper {
         if (user == null) {
             throw new ValidationException("User entity must not be null");
         }
-        return LoginResponseDTO.builder()
+        LoginResponseDTO.LoginResponseDTOBuilder builder = LoginResponseDTO.builder()
                 .message("Login successful")
                 .username(user.getUsername())
                 .email(user.getEmail())
@@ -55,8 +55,15 @@ public class UserMapper {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .phoneNumber(user.getPhoneNumber())
-                .token(token)
-                .build();
+                .token(token);
+
+        if (user.getShop() != null) {
+            builder.shopId(user.getShop().getId().toString())
+                    .shopSlug(user.getShop().getSlug())
+                    .shopName(user.getShop().getName());
+        }
+
+        return builder.build();
     }
 
     public EmployeeResponseDTO toEmployeeResponseDTO(User user) {

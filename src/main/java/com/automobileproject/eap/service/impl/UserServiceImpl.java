@@ -1,6 +1,7 @@
 package com.automobileproject.eap.service.impl;
 
 import com.automobileproject.eap.dto.request.UserRequestDTO;
+import com.automobileproject.eap.dto.request.EmployeeCreateRequestDTO;
 import com.automobileproject.eap.dto.response.EmployeeResponseDTO;
 import com.automobileproject.eap.dto.response.UserResponseDTO;
 import com.automobileproject.eap.entity.ROLE_TYPES;
@@ -9,6 +10,7 @@ import com.automobileproject.eap.exception.DuplicateEntryException;
 import com.automobileproject.eap.exception.EntryNotFoundException;
 import com.automobileproject.eap.exception.ValidationException;
 import com.automobileproject.eap.mapper.UserMapper;
+import com.automobileproject.eap.repo.ShopRepo;
 import com.automobileproject.eap.repo.UserRepo;
 import com.automobileproject.eap.service.EmailService;
 import com.automobileproject.eap.service.UserService;
@@ -28,6 +30,7 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepo userRepo;
+    private final ShopRepo shopRepo;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final EmailService emailService;
@@ -153,17 +156,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserResponseDTO> getUsersByRole(ROLE_TYPES role) {
-        return userRepo.findByRole(role)
-                .stream()
-                .map(userMapper::toResponseDTO)
-                .toList();
-    }
-
-    @Override
     @Transactional
-    public UserResponseDTO createEmployee(UserRequestDTO dto) {
-        log.info("Admin creating employee with email: {}", dto.getEmail());
+    public UserResponseDTO createEmployee(UUID shopId, EmployeeCreateRequestDTO dto) {
+        log.info("Creating employee for shop: {}", shopId);
 
         if (userRepo.findByUsername(dto.getUsername()).isPresent()) {
             throw new DuplicateEntryException("Username already exists: " + dto.getUsername());
@@ -172,27 +167,101 @@ public class UserServiceImpl implements UserService {
             throw new DuplicateEntryException("Email already registered: " + dto.getEmail());
         }
 
-        User user = userMapper.toEntity(dto);
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        user.setRole(ROLE_TYPES.EMPLOYEE);
-        user.setEmailVerified(true);
-        user.setActive(true);
+        com.automobileproject.eap.entity.Shop shop = shopRepo.findById(shopId)
+                .orElseThrow(() -> new EntryNotFoundException("Shop not found: " + shopId));
 
-        User savedUser = userRepo.save(user);
-        log.info("Employee created successfully with ID: {}", savedUser.getId());
+        User employee = User.builder()
+                .username(dto.getUsername())
+                .email(dto.getEmail())
+                .password(passwordEncoder.encode(dto.getPassword()))
+                .role(ROLE_TYPES.EMPLOYEE)
+                .phoneNumber(dto.getPhoneNumber())
+                .firstName(dto.getFirstName())
+                .lastName(dto.getLastName())
+                .emailVerified(true) // Auto-verified when created by shop owner
+                .isActive(true)
+                .shop(shop)
+                .build();
 
-        return userMapper.toResponseDTO(savedUser);
+        User saved = userRepo.save(employee);
+        log.info("Employee created: {} for shop: {}", saved.getUsername(), shopId);
+        return userMapper.toResponseDTO(saved);
+    }
+
+    @Override
+    public List<UserResponseDTO> getShopEmployees(UUID shopId) {
+        return userRepo.findByShopIdAndRole(shopId, ROLE_TYPES.EMPLOYEE)
+                .stream()
+                .map(userMapper::toResponseDTO)
+                .toList();
+    }
+
+    @Override
+    public List<UserResponseDTO> getShopCustomers(UUID shopId) {
+        return userRepo.findByShopIdAndRole(shopId, ROLE_TYPES.CUSTOMER)
+                .stream()
+                .map(userMapper::toResponseDTO)
+                .toList();
     }
 
     @Override
     @Transactional
-    public void toggleUserStatus(UUID id) {
-        log.info("Admin toggling user status for ID: {}", id);
-        User user = userRepo.findById(id)
-                .orElseThrow(() -> new EntryNotFoundException("User not found with ID: " + id));
+    public void toggleUserStatus(UUID userId, UUID shopId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new EntryNotFoundException("User not found: " + userId));
+
+        // Ensure user belongs to the same shop
+        if (user.getShop() == null || !user.getShop().getId().equals(shopId)) {
+            throw new ValidationException("User does not belong to this shop");
+        }
 
         user.setActive(!user.isActive());
         userRepo.save(user);
-        log.info("User status toggled. New state for ID {}: isActive={}", id, user.isActive());
+        log.info("User {} status toggled to: {}", user.getUsername(), user.isActive());
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDTO registerCustomerForShop(UUID shopId, UserRequestDTO dto) {
+        log.info("Registering customer for shop: {}", shopId);
+
+        if (userRepo.findByUsername(dto.getUsername()).isPresent()) {
+            throw new DuplicateEntryException("Username already exists: " + dto.getUsername());
+        }
+        if (userRepo.findByEmail(dto.getEmail()).isPresent()) {
+            throw new DuplicateEntryException("Email already registered: " + dto.getEmail());
+        }
+
+        com.automobileproject.eap.entity.Shop shop = shopRepo.findById(shopId)
+                .orElseThrow(() -> new EntryNotFoundException("Shop not found: " + shopId));
+
+        User customer = User.builder()
+                .username(dto.getUsername())
+                .email(dto.getEmail())
+                .password(passwordEncoder.encode(dto.getPassword()))
+                .role(ROLE_TYPES.CUSTOMER)
+                .phoneNumber(dto.getPhoneNumber())
+                .firstName(dto.getFirstName())
+                .lastName(dto.getLastName())
+                .emailVerified(false)
+                .isActive(true)
+                .shop(shop)
+                .build();
+
+        String verificationToken = UUID.randomUUID().toString();
+        customer.setVerificationToken(verificationToken);
+
+        User saved = userRepo.save(customer);
+        log.info("Customer registered: {} for shop: {}", saved.getUsername(), shopId);
+
+        try {
+            emailService.sendVerificationEmail(saved.getEmail(), verificationToken);
+        } catch (Exception e) {
+            log.error("Failed to send verification email to customer", e);
+        }
+
+        UserResponseDTO response = userMapper.toResponseDTO(saved);
+        response.setMessage("Customer registered successfully. Please verify your email.");
+        return response;
     }
 }

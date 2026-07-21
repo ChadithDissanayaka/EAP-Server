@@ -10,6 +10,7 @@ import com.automobileproject.eap.exception.ValidationException;
 import com.automobileproject.eap.mapper.AppointmentSlotMapper;
 import com.automobileproject.eap.repo.AppointmentRepo;
 import com.automobileproject.eap.repo.AppointmentSlotRepo;
+import com.automobileproject.eap.repo.ShopRepo;
 import com.automobileproject.eap.service.AppointmentSlotService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ public class AppointmentSlotServiceImpl implements AppointmentSlotService {
     private final AppointmentSlotRepo appointmentSlotRepo;
     private final AppointmentRepo appointmentRepo;
     private final AppointmentSlotMapper appointmentSlotMapper;
+    private final ShopRepo shopRepo;
 
     @Override
     public List<AppointmentSlotResponseDTO> getAllSlotTemplates() {
@@ -36,6 +38,56 @@ public class AppointmentSlotServiceImpl implements AppointmentSlotService {
                 .stream()
                 .map(appointmentSlotMapper::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<AppointmentSlotResponseDTO> getSlotTemplatesByShop(UUID shopId) {
+        return appointmentSlotRepo.findByShopId(shopId)
+                .stream()
+                .map(appointmentSlotMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public AppointmentSlotResponseDTO createSlotTemplate(UUID shopId, AppointmentSlotRequestDTO dto) {
+        if (appointmentSlotRepo.existsBySessionPeriodAndSlotNumberAndShopId(dto.getSessionPeriod(), dto.getSlotNumber(), shopId)) {
+            throw new ValidationException("Slot template already exists for this period and slot number in this shop");
+        }
+
+        com.automobileproject.eap.entity.Shop shop = shopRepo.findById(shopId)
+                .orElseThrow(() -> new EntryNotFoundException("Shop not found: " + shopId));
+
+        AppointmentSlot slot = AppointmentSlot.builder()
+                .sessionPeriod(dto.getSessionPeriod())
+                .slotNumber(dto.getSlotNumber())
+                .startTime(dto.getStartTime())
+                .endTime(dto.getEndTime())
+                .shop(shop)
+                .build();
+
+        AppointmentSlot saved = appointmentSlotRepo.save(slot);
+        log.info("Created slot template: {} for shop: {}", saved.getSlotDescription(), shopId);
+        return appointmentSlotMapper.toResponseDTO(saved);
+    }
+
+    @Override
+    @Transactional
+    public void deleteSlotTemplate(UUID slotId, UUID shopId) {
+        AppointmentSlot slot = appointmentSlotRepo.findById(slotId)
+                .orElseThrow(() -> new EntryNotFoundException("Slot template not found: " + slotId));
+
+        if (!slot.getShop().getId().equals(shopId)) {
+            throw new ValidationException("Slot template does not belong to this shop");
+        }
+
+        // Check if there are any appointments booked for this slot
+        if (appointmentRepo.existsByAppointmentSlotId(slotId)) {
+            throw new ValidationException("Cannot delete slot template as it has associated appointments");
+        }
+
+        appointmentSlotRepo.delete(slot);
+        log.info("Deleted slot template: {} from shop: {}", slotId, shopId);
     }
 
     @Override
@@ -79,8 +131,24 @@ public class AppointmentSlotServiceImpl implements AppointmentSlotService {
     }
 
     @Override
+    public AppointmentSlot findSlotTemplate(SESSION_PERIOD_TYPES period, Integer slotNumber, UUID shopId) {
+        if (slotNumber < 1 || slotNumber > 5) {
+            throw new ValidationException("Slot number must be between 1 and 5");
+        }
+        return appointmentSlotRepo.findBySessionPeriodAndSlotNumberAndShopId(period, slotNumber, shopId)
+                .orElseThrow(() -> new EntryNotFoundException(
+                        String.format("Slot template not found: %s Slot %d for shop: %s", period, slotNumber, shopId)));
+    }
+
+    @Override
     public boolean isSlotAvailable(LocalDate date, SESSION_PERIOD_TYPES period, Integer slotNumber) {
         AppointmentSlot slot = findSlotTemplate(period, slotNumber);
+        return !appointmentRepo.isSlotBookedOnDate(slot.getId(), date);
+    }
+
+    @Override
+    public boolean isSlotAvailable(LocalDate date, SESSION_PERIOD_TYPES period, Integer slotNumber, UUID shopId) {
+        AppointmentSlot slot = findSlotTemplate(period, slotNumber, shopId);
         return !appointmentRepo.isSlotBookedOnDate(slot.getId(), date);
     }
 
