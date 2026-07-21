@@ -19,5 +19,6 @@ public class UserResponseDTO {
     private String lastName;
     private String phoneNumber;
     private Boolean emailVerified;
+    private Boolean isActive;
     private String message;
 }

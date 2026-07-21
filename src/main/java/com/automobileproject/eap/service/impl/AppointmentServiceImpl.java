@@ -381,8 +381,14 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public AppointmentResponseDTO cancelAppointment(UUID appointmentId) {
+    public AppointmentResponseDTO cancelAppointment(UUID appointmentId, String userEmail, boolean isEmployeeOrAdmin) {
         Appointment appointment = findAppointmentById(appointmentId);
+
+        if (!isEmployeeOrAdmin) {
+            if (!appointment.getVehicle().getOwner().getEmail().equalsIgnoreCase(userEmail)) {
+                throw new ValidationException("You are not authorized to cancel this appointment.");
+            }
+        }
 
         if (appointment.getStatus() == APPOINTMENT_STATUS_TYPES.COMPLETED ||
                 appointment.getStatus() == APPOINTMENT_STATUS_TYPES.CANCELLED) {
