@@ -27,6 +27,7 @@ public class NotificationService {
     private final SimpMessagingTemplate messagingTemplate;
     private final ApplicationEventPublisher eventPublisher;
     private final UserRepo userRepo;
+    private final com.automobileproject.eap.repo.AppointmentRepo appointmentRepo;
 
     // ── Event listener for new appointment creation ──────────────────────────
 
@@ -35,7 +36,14 @@ public class NotificationService {
     public void handleAppointmentCreated(AppointmentCreatedEvent event) {
         log.info("New appointment created: {}. Notifying admins.", event.getAppointmentId());
         String msg = "New appointment booked by " + event.getCustomerEmail();
-        sendToAdmins(event.getNotificationType().name(), event.getAppointmentId().toString(), msg);
+        java.util.UUID shopId = appointmentRepo.findById(event.getAppointmentId())
+                .map(a -> a.getShop().getId())
+                .orElse(null);
+        if (shopId != null) {
+            sendToAdmins(shopId, event.getNotificationType().name(), event.getAppointmentId().toString(), msg);
+        } else {
+            log.warn("Could not find shop for created appointment: {}", event.getAppointmentId());
+        }
     }
 
     // ── Targeted notification methods ────────────────────────────────────────
@@ -60,18 +68,18 @@ public class NotificationService {
     }
 
     /**
-     * Notify all admins.
+     * Notify all admins (shop owners).
      */
-    public void sendToAdmins(String type, String appointmentId, String message) {
-        List<String> adminEmails = userRepo.findByRole(ROLE_TYPES.ADMIN)
+    public void sendToAdmins(java.util.UUID shopId, String type, String appointmentId, String message) {
+        List<String> adminEmails = userRepo.findByShopIdAndRole(shopId, ROLE_TYPES.SHOP_OWNER)
                 .stream()
                 .map(User::getEmail)
                 .collect(Collectors.toList());
         if (adminEmails.isEmpty()) {
-            log.warn("No admin users found to notify.");
+            log.warn("No shop owner users found to notify for shop: {}.", shopId);
             return;
         }
-        log.info("Queuing notification for admins {}. Type: {}", adminEmails, type);
+        log.info("Queuing notification for shop owners {}. Type: {}", adminEmails, type);
         eventPublisher.publishEvent(new WebSocketNotificationEvent(
                 adminEmails, "admin", type, appointmentId, message));
     }

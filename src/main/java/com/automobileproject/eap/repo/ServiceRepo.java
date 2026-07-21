@@ -15,4 +15,10 @@ public interface ServiceRepo extends JpaRepository<Service, UUID> {
     boolean existsByName(String name);
 
     Optional<Service> findByName(String name);
+
+    List<Service> findByShopId(UUID shopId);
+
+    boolean existsByNameAndShopId(String name, UUID shopId);
+
+    Optional<Service> findByNameAndShopId(String name, UUID shopId);
 }

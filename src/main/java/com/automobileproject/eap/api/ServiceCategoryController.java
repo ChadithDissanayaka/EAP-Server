@@ -25,77 +25,77 @@ import java.util.UUID;
 @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
 public class ServiceCategoryController {
 
-    private final ServiceCategoryService serviceCategoryService;
+        private final ServiceCategoryService serviceCategoryService;
 
-    @Operation(summary = "Create a new service category (Admin only)")
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<StandardResponseDTO> createCategory(@Valid @RequestBody ServiceCategoryRequestDTO dto) {
-        ServiceCategoryResponseDTO response = serviceCategoryService.createCategory(dto);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(StandardResponseDTO.builder()
-                        .code(201)
-                        .message("Service category created successfully")
-                        .data(response)
-                        .build());
-    }
+        @Operation(summary = "Create a new service category (Admin only)")
+        @PostMapping
+        @PreAuthorize("hasRole('SHOP_OWNER')")
+        public ResponseEntity<StandardResponseDTO> createCategory(@Valid @RequestBody ServiceCategoryRequestDTO dto) {
+                ServiceCategoryResponseDTO response = serviceCategoryService.createCategory(dto);
+                return ResponseEntity
+                                .status(HttpStatus.CREATED)
+                                .body(StandardResponseDTO.builder()
+                                                .code(201)
+                                                .message("Service category created successfully")
+                                                .data(response)
+                                                .build());
+        }
 
-    @Operation(summary = "Update a service category (Admin only)")
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<StandardResponseDTO> updateCategory(
-            @PathVariable UUID id,
-            @Valid @RequestBody ServiceCategoryRequestDTO dto) {
-        ServiceCategoryResponseDTO response = serviceCategoryService.updateCategory(id, dto);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(StandardResponseDTO.builder()
-                        .code(200)
-                        .message("Service category updated successfully")
-                        .data(response)
-                        .build());
-    }
+        @Operation(summary = "Update a service category (Admin only)")
+        @PutMapping("/{id}")
+        @PreAuthorize("hasRole('SHOP_OWNER')")
+        public ResponseEntity<StandardResponseDTO> updateCategory(
+                        @PathVariable UUID id,
+                        @Valid @RequestBody ServiceCategoryRequestDTO dto) {
+                ServiceCategoryResponseDTO response = serviceCategoryService.updateCategory(id, dto);
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Service category updated successfully")
+                                                .data(response)
+                                                .build());
+        }
 
-    @Operation(summary = "Delete a service category (Admin only)")
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<StandardResponseDTO> deleteCategory(@PathVariable UUID id) {
-        serviceCategoryService.deleteCategory(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(StandardResponseDTO.builder()
-                        .code(200)
-                        .message("Service category deleted successfully")
-                        .data(null)
-                        .build());
-    }
+        @Operation(summary = "Delete a service category (Admin only)")
+        @DeleteMapping("/{id}")
+        @PreAuthorize("hasRole('SHOP_OWNER')")
+        public ResponseEntity<StandardResponseDTO> deleteCategory(@PathVariable UUID id) {
+                serviceCategoryService.deleteCategory(id);
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Service category deleted successfully")
+                                                .data(null)
+                                                .build());
+        }
 
-    @Operation(summary = "Get all service categories")
-    @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
-    public ResponseEntity<StandardResponseDTO> getAllCategories() {
-        List<ServiceCategoryResponseDTO> categories = serviceCategoryService.getAllCategories();
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(StandardResponseDTO.builder()
-                        .code(200)
-                        .message("Service categories retrieved successfully")
-                        .data(categories)
-                        .build());
-    }
+        @Operation(summary = "Get all service categories")
+        @GetMapping
+        @PreAuthorize("hasAnyRole('SHOP_OWNER', 'CUSTOMER')")
+        public ResponseEntity<StandardResponseDTO> getAllCategories() {
+                List<ServiceCategoryResponseDTO> categories = serviceCategoryService.getAllCategories();
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Service categories retrieved successfully")
+                                                .data(categories)
+                                                .build());
+        }
 
-    @Operation(summary = "Get a service category by ID")
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
-    public ResponseEntity<StandardResponseDTO> getCategoryById(@PathVariable UUID id) {
-        ServiceCategoryResponseDTO response = serviceCategoryService.getCategoryById(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(StandardResponseDTO.builder()
-                        .code(200)
-                        .message("Service category retrieved successfully")
-                        .data(response)
-                        .build());
-    }
+        @Operation(summary = "Get a service category by ID")
+        @GetMapping("/{id}")
+        @PreAuthorize("hasAnyRole('SHOP_OWNER', 'CUSTOMER')")
+        public ResponseEntity<StandardResponseDTO> getCategoryById(@PathVariable UUID id) {
+                ServiceCategoryResponseDTO response = serviceCategoryService.getCategoryById(id);
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(StandardResponseDTO.builder()
+                                                .code(200)
+                                                .message("Service category retrieved successfully")
+                                                .data(response)
+                                                .build());
+        }
 }

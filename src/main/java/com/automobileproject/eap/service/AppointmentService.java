@@ -48,7 +48,7 @@ public interface AppointmentService {
 
     AppointmentResponseDTO acceptAppointment(UUID appointmentId, String employeeEmail);
 
-    AppointmentResponseDTO cancelAppointment(UUID appointmentId, String userEmail, boolean isEmployeeOrAdmin);
+    AppointmentResponseDTO cancelAppointment(UUID appointmentId, String userEmail);
 
     AppointmentResponseDTO rejectModificationRequest(UUID id, String rejectionReason);
 

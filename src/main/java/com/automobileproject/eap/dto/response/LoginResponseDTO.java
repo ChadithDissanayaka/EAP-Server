@@ -17,4 +17,7 @@ public class LoginResponseDTO {
     private String lastName;
     private String phoneNumber;
     private String token;
+    private String shopId;
+    private String shopSlug;
+    private String shopName;
 }

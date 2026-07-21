@@ -1,6 +1,7 @@
 package com.automobileproject.eap.service;
 
 import com.automobileproject.eap.dto.request.UserRequestDTO;
+import com.automobileproject.eap.dto.request.EmployeeCreateRequestDTO;
 import com.automobileproject.eap.dto.response.UserResponseDTO;
 import com.automobileproject.eap.dto.response.EmployeeResponseDTO;
 import com.automobileproject.eap.entity.ROLE_TYPES;
@@ -26,9 +27,13 @@ public interface UserService {
 
     List<EmployeeResponseDTO> getActiveEmployees();
 
-    List<UserResponseDTO> getUsersByRole(ROLE_TYPES role);
+    UserResponseDTO createEmployee(UUID shopId, EmployeeCreateRequestDTO dto);
 
-    UserResponseDTO createEmployee(UserRequestDTO dto);
+    List<UserResponseDTO> getShopEmployees(UUID shopId);
 
-    void toggleUserStatus(UUID id);
+    List<UserResponseDTO> getShopCustomers(UUID shopId);
+
+    void toggleUserStatus(UUID userId, UUID shopId);
+
+    UserResponseDTO registerCustomerForShop(UUID shopId, UserRequestDTO dto);
 }
