@@ -8,7 +8,6 @@ import com.automobileproject.eap.entity.SESSION_PERIOD_TYPES;
 import java.time.LocalDate;
 import java.util.UUID;
 import java.util.List;
-import java.util.UUID;
 
 public interface AppointmentSlotService {
 

@@ -4,7 +4,6 @@ import com.automobileproject.eap.dto.request.UserRequestDTO;
 import com.automobileproject.eap.dto.request.EmployeeCreateRequestDTO;
 import com.automobileproject.eap.dto.response.UserResponseDTO;
 import com.automobileproject.eap.dto.response.EmployeeResponseDTO;
-import com.automobileproject.eap.entity.ROLE_TYPES;
 
 import java.util.List;
 import java.util.UUID;

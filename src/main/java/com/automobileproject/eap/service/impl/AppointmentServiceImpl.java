@@ -394,8 +394,11 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponseDTO cancelAppointment(UUID appointmentId, String userEmail) {
         Appointment appointment = findAppointmentById(appointmentId);
         User user = findUserByEmail(userEmail);
+        boolean isEmployeeOrShopOwner = user.getRole() == ROLE_TYPES.EMPLOYEE
+                || user.getRole() == ROLE_TYPES.SHOP_OWNER
+                || user.getRole() == ROLE_TYPES.SUPER_ADMIN;
 
-        if (!isEmployeeOrAdmin) {
+        if (!isEmployeeOrShopOwner) {
             if (!appointment.getVehicle().getOwner().getEmail().equalsIgnoreCase(userEmail)) {
                 throw new ValidationException("You are not authorized to cancel this appointment.");
             }
